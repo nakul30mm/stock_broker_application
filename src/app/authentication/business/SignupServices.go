@@ -9,13 +9,15 @@ import (
 	"stock_broker_application/src/utils"
 )
 
+// struct declaration
 type CreateUserService struct {
 	createUserRepository repository.CreateUserRepository
 }
 
+// struct initialisation
 func NewCreateUserService(createUserRepository repository.CreateUserRepository) *CreateUserService {
 	return &CreateUserService{
-		createUserRepository: createUserRepository,
+		createUserRepository: createUserRepository,  // service local var = router local var
 	}
 }
 
