@@ -43,4 +43,5 @@ const (
 	ErrPasswordMismatch       = "password does not match %w"
 	ErrAuthenticationFailed   = "authentication failed"
 	ErrTokenGenerationFailed  = "failed to generate authentication tokens %s"
+	ErrMissingCredentials     = "username and password are required"
 )

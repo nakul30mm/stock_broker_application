@@ -5,36 +5,26 @@ import (
 	"authentication/repository"
 	"context"
 	"fmt"
-	genericErrors "stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
 )
 
 type CreateUserService struct {
-	createUserRepository repository.CreateUserRepository
+	createUserRepository repository.CreateUserRepository // we haev taken a field that is and interface in repo
 }
 
 func NewCreateUserService(createUserRepository repository.CreateUserRepository) *CreateUserService {
 	return &CreateUserService{
-		createUserRepository: createUserRepository,
+		createUserRepository: createUserRepository, //this is a constructor
 	}
 }
 
 func (service *CreateUserService) CreateNewUser(ctx context.Context, spanCtx context.Context, bffCreateUserRequest models.BFFCreateUserRequest) error {
 	postgresClinet := utils.GetPostgresClient()
-	tx := postgresClinet.GormDB.Begin()
+	client := postgresClinet.GormDB
 
-	if tx.Error != nil {
-		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)
-	}
-
-	err := service.createUserRepository.CreateNewUser(spanCtx, tx, bffCreateUserRequest)
+	err := service.createUserRepository.CreateNewUser(spanCtx, client, bffCreateUserRequest)
 	if err != nil {
-		tx.Rollback()
 		return fmt.Errorf("%w", err)
-	}
-
-	if err := tx.Commit().Error; err != nil {
-		return fmt.Errorf(genericErrors.ErrCommitTx, err)
 	}
 
 	return nil
