@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	genericErrors "stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
 )
 
@@ -23,11 +22,7 @@ func NewSignInUserService(signInUserRepository repository.SignInUserRepository) 
 
 func (service *SignInUserService) SignInUser(ctx context.Context, spanCtx context.Context, bffSignInRequest models.BFFSignInUserRequest) error {
 	postgresClinet := utils.GetPostgresClient()
-	tx := postgresClinet.GormDB.Begin()
-
-	if tx.Error != nil {
-		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)
-	}
+	tx := postgresClinet.GormDB
 
 	userDataFromDB, errorFromRepository := service.signInUserRepository.SignInUser(spanCtx, tx, bffSignInRequest)
 	if errorFromRepository != nil {
