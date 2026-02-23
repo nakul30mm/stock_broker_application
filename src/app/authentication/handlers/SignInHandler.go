@@ -7,7 +7,6 @@ import (
 	"net/http"
 	genericModels "stock_broker_application/src/models"
 	"stock_broker_application/src/utils/validations"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -31,7 +30,7 @@ func NewSigninUserHandler(service *business.SigninUserService) *SigninUserHandle
 // @Param request body models.BFFSigninUserRequest true "User Signin Request"
 // @Success 200 {string} string "User signed in successfully"
 // @Failure 400 {object} models.ErrorAPIResponse "Invalid input payload"
-// @Failure 401 {object} models.ErrorAPIResponse "Invalid email or password"
+// @Failure 401 {object} models.ErrorAPIResponse "Invalid username or password"
 // @Failure 500 {object} models.ErrorAPIResponse "Authentication failed"
 // @Router /api/auth/signin [post]
 func (controller *SigninUserHandler) HandleSigninUser(ctx *gin.Context) {
@@ -57,28 +56,19 @@ func (controller *SigninUserHandler) HandleSigninUser(ctx *gin.Context) {
 	}
 
 	err := controller.service.SigninUser(ctx, ctx.Request.Context(), bffSigninUserRequest)
-	if err != nil {  
+	if err != nil {
 
-		if err.Error() == constants.ErrInvalidEmailorPassword ||
-			strings.Contains(err.Error(), "password does not match") {
-			ctx.IndentedJSON(http.StatusUnauthorized, genericModels.ErrorAPIResponse{
-				Error: constants.ErrInvalidEmailorPassword,
+		if err.Error() == constants.ErrUserNotFound {
+			ctx.JSON(http.StatusUnauthorized, genericModels.ErrorAPIResponse{
+				Error: constants.ErrInvalidUsername,
 			})
 			return
 		}
 
-		// if err.Error() == constants.ErrMissingCredentials {
-		// 	ctx.IndentedJSON(http.StatusBadRequest, genericModels.ErrorAPIResponse{
-		// 		Error: constants.ErrMissingCredentials,
-		// 	})
-		// 	return
-		// }
-
-		ctx.IndentedJSON(http.StatusInternalServerError, genericModels.ErrorAPIResponse{
+		ctx.JSON(http.StatusUnauthorized, genericModels.ErrorAPIResponse{
 			Error: constants.ErrAuthenticationFailed,
 		})
 		return
 	}
-
 	ctx.IndentedJSON(http.StatusOK, constants.UserLoggedInSuccessMsg)
 }

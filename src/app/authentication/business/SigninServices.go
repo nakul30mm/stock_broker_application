@@ -23,16 +23,18 @@ func NewSigninUserService(signinUserRepository repository.SigninUserRepository) 
 func (service *SigninUserService) SigninUser(ctx context.Context, spanCtx context.Context, bffSigninUserRequest models.BFFSigninUserRequest) error {
 	postgresClinet := utils.GetPostgresClient()
 	client := postgresClinet.GormDB
-	datafromDB, err := service.signinUserRepository.SigninUser(spanCtx, client, bffSigninUserRequest)
+	user, err := service.signinUserRepository.SigninUser(spanCtx, client, bffSigninUserRequest)
 	if err != nil {
-		return fmt.Errorf("%w", err)
+		if err.Error() == constants.ErrUserNotFound {
+			return errors.New(constants.ErrUserNotFound)
+		}
+		return err
 	}
 
-	passwordMatch := utils.CompareHashPassword(datafromDB.Password, bffSigninUserRequest.Password)
+	passwordMatch := utils.CompareHashPassword(user.Password, bffSigninUserRequest.Password)
 	if !passwordMatch {
-		return fmt.Errorf(constants.ErrPasswordMismatch, errors.New(constants.ErrInvalidEmailorPassword))
+		return fmt.Errorf(constants.ErrPasswordMismatch, errors.New(constants.ErrInvalidUsernamePassword))
 	}
-
 	return nil
 
 }

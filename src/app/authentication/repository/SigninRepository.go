@@ -38,7 +38,7 @@ func (user *signinUserRepository) SigninUser(ctx context.Context, db *gorm.DB, b
 	//we have checked here with username
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, errors.New(constants.ErrInvalidEmailorPassword)
+			return nil, errors.New(constants.ErrUserNotFound)
 		}
 		return nil, fmt.Errorf("%s: %w", constants.ErrAuthenticationFailed, result.Error)
 	}

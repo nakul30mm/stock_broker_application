@@ -53,7 +53,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Invalid email or password",
+                        "description": "Invalid username or password",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorAPIResponse"
                         }
