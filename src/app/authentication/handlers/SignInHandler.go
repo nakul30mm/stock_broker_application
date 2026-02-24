@@ -40,8 +40,8 @@ func NewSignInHandler(service *business.SignInService) *SignInHandler {
 func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 	var bffSignInRequest models.BFFSignInRequest
 
-	if err := ctx.ShouldBind(&bffSignInRequest); err != nil {
-		errorMsgs := genericModels.ErrorMessage{Key: err.(*json.UnmarshalTypeError).Field, ErrorMessage: constants.ErrUnexpectedValue}
+	if errBindReq := ctx.ShouldBind(&bffSignInRequest); errBindReq != nil {
+		errorMsgs := genericModels.ErrorMessage{Key: errBindReq.(*json.UnmarshalTypeError).Field, ErrorMessage: constants.ErrUnexpectedValue}
 		ctx.IndentedJSON(http.StatusBadRequest, genericModels.ErrorAPIResponse{
 			Message: errorMsgs,
 			Error:   constants.ErrInvalidPayload,
@@ -49,15 +49,15 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 		return
 	}
 
-	if err := validations.GetBFFValidator().Struct(&bffSignInRequest); err != nil {
-		validationErros, _ := validations.FormatValidationErrors(err)
+	if errValidation := validations.GetBFFValidator().Struct(&bffSignInRequest); errValidation != nil {
+		validationErros, _ := validations.FormatValidationErrors(errValidation)
 		ctx.IndentedJSON(http.StatusBadRequest, validationErros)
 		return
 	}
 
-	err := controller.service.SignIn(ctx, ctx.Request.Context(), bffSignInRequest)
-	if err != nil {
-		if errors.Is(err, commons.ErrUserNotFound) {
+	errWhileSignIn := controller.service.SignIn(ctx, ctx.Request.Context(), bffSignInRequest)
+	if errWhileSignIn != nil {
+		if errors.Is(errWhileSignIn, commons.UserNotFoundError) {
 			errorResponse := genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          commons.Username,
@@ -69,7 +69,7 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 			return
 		}
 
-		if errors.Is(err, commons.ErrIncorrectPassword) {
+		if errors.Is(errWhileSignIn, commons.IncorrectPasswordError) {
 			errorResponse := genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          commons.Password,

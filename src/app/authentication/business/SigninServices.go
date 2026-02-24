@@ -28,13 +28,13 @@ func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Contex
 		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)
 	}
 
-	user, err := service.signinRepository.GetUserByUsername(spanCtx, tx, bffSignInRequest.Username)
-	if err != nil {
-		return commons.ErrUserNotFound
+	user, errGetUserFromDB := service.signinRepository.GetUserByUsername(spanCtx, tx, bffSignInRequest.Username)
+	if errGetUserFromDB != nil {
+		return commons.UserNotFoundError
 	}
 
 	if !utils.CompareHashPassword(user.Password, bffSignInRequest.Password) {
-		return commons.ErrIncorrectPassword
+		return commons.IncorrectPasswordError
 	}
 	return nil
 }

@@ -7,8 +7,8 @@ import (
 
 // Add your common functionalities here.
 
-var ErrUserNotFound = errors.New(constants.ErrUserNotFound)
-var ErrIncorrectPassword = errors.New(constants.ErrIncorrectPassword)
+var UserNotFoundError = errors.New(constants.ErrUserNotFound)
+var IncorrectPasswordError = errors.New(constants.ErrIncorrectPassword)
 
 // constants for returning keys
 const (

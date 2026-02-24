@@ -53,7 +53,8 @@ func FormatValidationErrors(err error) ([]models.ErrorMessage, string) {
 					for _, msg := range passwordErrors {
 						validationErrors = append(validationErrors, models.ErrorMessage{
 							Key:          err.Field(),
-							ErrorMessage: msg,
+							ErrorMessage: msg + constants.ErrInvalidValue,
+							// ErrorMessage: (constants.ErrInvalidValue),
 						})
 					}
 					continue
