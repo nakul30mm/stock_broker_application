@@ -28,6 +28,7 @@ func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Contex
 		return commons.UserNotFoundError
 	}
 
+	//mock otp testing by updating the otpSent and otpExpiresAt fields in db table when signed in for validation task
 	otp := uint64(1234)
 	expiry := time.Now().Add(2 * time.Minute)
 
@@ -36,7 +37,7 @@ func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Contex
 		"otpExpiresAt": expiry,
 	})
 	fmt.Println("mock otp generated: ", otp)
-	
+
 	if !utils.CompareHashPassword(userFromDB.Password, bffSignInRequest.Password) {
 		return commons.IncorrectPasswordError
 	}
