@@ -13,9 +13,9 @@ type ValidateUserOtpService struct {
 	repository repository.ValidateUserOtpRepository
 }
 
-func NewValidateUserOtpService(repositry repository.ValidateUserOtpRepository) *ValidateUserOtpService {
+func NewValidateUserOtpService(repository repository.ValidateUserOtpRepository) *ValidateUserOtpService {
 	return &ValidateUserOtpService{
-		repository: repositry,
+		repository: repository,
 	}
 }
 
@@ -27,11 +27,12 @@ func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, span
 		return commons.UserNotFoundError
 	}
 
-	if !utils.CheckOtpExpiry(userFromDB.OtpExpiresAt, time.Now()) {
-		return commons.OtpExpired
-	}
 	if !utils.CompareUserRequestOTP(userFromDB.OtpSent, bffValidateUserOtpRequest.Otp) {
 		return commons.IncorrectOTPError
+	}
+
+	if !utils.CheckOtpExpiry(userFromDB.OtpExpiresAt, time.Now()) {
+		return commons.OtpExpired
 	}
 	return nil
 }

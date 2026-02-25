@@ -24,6 +24,19 @@ func NewValidateUserOtpHandler(service *business.ValidateUserOtpService) *Valida
 	}
 }
 
+// Handles user OTP validation
+// @Summary Validates user OTP
+// @Description Validates user OTP and return clear success/ failure message
+// @Tags User
+// @Accept json
+// @Produce json
+// @Param request body models.BFFValidateUserOtpRequest true "User OTP Validation Request"
+// @Success 200 {object} models.BFFValidateUserOtpResponse "OTP validation successful"
+// @Failure 400 {object} models.ErrorAPIResponse "Invalid input payload"
+// @Failure 401 {object} models.ErrorAPIResponse "Incorrect OTP"
+// @Failure 404 {object} models.ErrorAPIResponse "User does not exist"
+// @Failure 500 {object} models.ErrorAPIResponse "Internal Server Error"
+// @Router /api/auth/validate-otp [post]
 func (controller *ValidateUserOtpHandler) HandleValidateUserOtp(ctx *gin.Context) {
 	var bffValidateUserOtpRequest models.BFFValidateUserOtpRequest
 	if errWhileBindingReq := ctx.ShouldBind(&bffValidateUserOtpRequest); errWhileBindingReq != nil {

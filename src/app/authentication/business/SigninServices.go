@@ -6,8 +6,8 @@ import (
 	"authentication/repository"
 	"context"
 	"fmt"
-	genericErrors "stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
+	"time"
 )
 
 type SignInService struct {
@@ -21,19 +21,23 @@ func NewSignInService(signinRepository repository.SignInRepository) *SignInServi
 }
 
 func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Context, bffSignInRequest models.BFFSignInRequest) error {
-	postgresClinet := utils.GetPostgresClient()
-	tx := postgresClinet.GormDB.Begin()
+	postgresClinet := utils.GetPostgresClient().GormDB
 
-	if tx.Error != nil {
-		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)
-	}
-
-	user, errGetUserFromDB := service.signinRepository.GetUserByUsername(spanCtx, tx, bffSignInRequest.Username)
+	userFromDB, errGetUserFromDB := service.signinRepository.GetUserByUsername(spanCtx, postgresClinet, bffSignInRequest.Username)
 	if errGetUserFromDB != nil {
 		return commons.UserNotFoundError
 	}
 
-	if !utils.CompareHashPassword(user.Password, bffSignInRequest.Password) {
+	otp := uint64(1234)
+	expiry := time.Now().Add(2 * time.Minute)
+
+	postgresClinet.Model(&userFromDB).Updates(map[string]interface{}{
+		"otpSent":      otp,
+		"otpExpiresAt": expiry,
+	})
+	fmt.Println("mock otp generated: ", otp)
+	
+	if !utils.CompareHashPassword(userFromDB.Password, bffSignInRequest.Password) {
 		return commons.IncorrectPasswordError
 	}
 	return nil

@@ -29,12 +29,12 @@ func NewSignInHandler(service *business.SignInService) *SignInHandler {
 // @Description Authenticates user and returns JWT token
 // @Tags User
 // @Accept json
-// @Produce
+// @Produce json
 // @Param request body models.BFFSignInRequest true "User Sign In Request"
 // @Success 200 {object} models.BFFSignInResponse "Signin successful"
 // @Failure 400 {object} models.ErrorAPIResponse "Invalid input payload"
 // @Failure 401 {object} models.ErrorAPIResponse "Invalid credentials"
-// @Failure 409 {object} models.ErrorAPIResponse "User does not exist"
+// @Failure 404 {object} models.ErrorAPIResponse "User does not exist"
 // @Failure 500 {object} models.ErrorAPIResponse "Internal Server Error"
 // @Router /api/auth/signin [post]
 func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
