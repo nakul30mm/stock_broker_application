@@ -84,7 +84,7 @@ func (controller *ValidateUserOtpHandler) HandleValidateUserOtp(ctx *gin.Context
 			return
 		}
 
-		if errors.Is(errWhileOtpValidation, commons.OtpExpired) {
+		if errors.Is(errWhileOtpValidation, commons.OtpExpiredError) {
 			errorExpiredOtpResponse := genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          commons.Otp,
