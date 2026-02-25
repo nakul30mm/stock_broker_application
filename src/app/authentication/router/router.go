@@ -39,10 +39,15 @@ func GetRouter() *gin.Engine {
 	signInService := business.NewSignInService(signInRepository)
 	signInHandler := handlers.NewSignInHandler(signInService)
 
+	verifyUserOtpRepository := repository.NewValidateUserOtpRepository()
+	verifyUserOtpService := business.NewValidateUserOtpService(verifyUserOtpRepository)
+	verifyUserOtpHandler := handlers.NewValidateUserOtpHandler(verifyUserOtpService)
+
 	authGroup := router.Group(constants.AuthRoutePrefix)
 	{
 		authGroup.POST(constants.Signup, createUserHandler.HandleCreaterUser)
 		authGroup.POST(constants.Signin, signInHandler.HandleSignIn)
+		authGroup.POST(constants.Validateotp, verifyUserOtpHandler.HandleValidateUserOtp)
 	}
 
 	return router

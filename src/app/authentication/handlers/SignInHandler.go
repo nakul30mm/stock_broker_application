@@ -42,6 +42,7 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 
 	if errBindReq := ctx.ShouldBind(&bffSignInRequest); errBindReq != nil {
 		errorMsgs := genericModels.ErrorMessage{Key: errBindReq.(*json.UnmarshalTypeError).Field, ErrorMessage: constants.ErrUnexpectedValue}
+
 		ctx.IndentedJSON(http.StatusBadRequest, genericModels.ErrorAPIResponse{
 			Message: errorMsgs,
 			Error:   constants.ErrInvalidPayload,
