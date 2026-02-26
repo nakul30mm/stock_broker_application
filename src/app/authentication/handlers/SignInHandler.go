@@ -4,6 +4,7 @@ import (
 	"authentication/business"
 	"authentication/commons"
 	"authentication/commons/constants"
+	constErrors "authentication/commons/constants"
 	"authentication/models"
 	"encoding/json"
 	"errors"
@@ -57,7 +58,7 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 
 	errWhileSignIn := controller.service.SignIn(ctx, ctx.Request.Context(), bffSignInRequest)
 	if errWhileSignIn != nil {
-		if errors.Is(errWhileSignIn, commons.UserNotFoundError) {
+		if errors.Is(errWhileSignIn, errors.New(constErrors.ErrUserNotFound)) {
 			errorResponse := genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          commons.Username,
@@ -69,7 +70,7 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 			return
 		}
 
-		if errors.Is(errWhileSignIn, commons.IncorrectPasswordError) {
+		if errors.Is(errWhileSignIn, errors.New(constErrors.ErrIncorrectPassword)) {
 			errorResponse := genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          commons.Password,

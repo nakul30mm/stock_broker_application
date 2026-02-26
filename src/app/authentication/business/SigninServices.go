@@ -1,10 +1,11 @@
 package business
 
 import (
-	"authentication/commons"
+	constErrors "authentication/commons/constants"
 	"authentication/models"
 	"authentication/repository"
 	"context"
+	"errors"
 	"fmt"
 	genericErrors "stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
@@ -30,11 +31,11 @@ func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Contex
 
 	user, errGetUserFromDB := service.signinRepository.GetUserByUsername(spanCtx, tx, bffSignInRequest.Username)
 	if errGetUserFromDB != nil {
-		return commons.UserNotFoundError
+		return errors.New(constErrors.ErrUserNotFound)
 	}
 
 	if !utils.CompareHashPassword(user.Password, bffSignInRequest.Password) {
-		return commons.IncorrectPasswordError
+		return errors.New(constErrors.ErrIncorrectPassword)
 	}
 	return nil
 }
