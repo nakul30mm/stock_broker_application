@@ -30,6 +30,7 @@ func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpReposit
 	}
 }
 
+// this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
 func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) error {
 	// postgresClinet := utils.GetPostgresClient().GormDB
 	userFromDB, errGettingUserFromDB := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)

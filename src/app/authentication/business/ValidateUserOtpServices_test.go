@@ -12,13 +12,14 @@ import (
 	"github.com/go-playground/assert/v2"
 )
 
+// test function for testing user not found error
 func TestValidateUserOTP_UserNotFound(t *testing.T) {
 	mockRepo := &repository.MockValidateUserOtpRepository{
 		User:  nil,
 		Error: commons.UserNotFoundError,
 	}
 
-	service := NewValidateUserOtpService(mockRepo, nil)
+	service := NewValidateUserOtpService(mockRepo, nil) //service{repository: mockRepo, db: nil}
 
 	testRequest := models.BFFValidateUserOtpRequest{
 		Username: "Aman00",
@@ -27,11 +28,12 @@ func TestValidateUserOTP_UserNotFound(t *testing.T) {
 
 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
 	// if err != commons.UserNotFoundError {
-	// 	t.Errorf("expected User Not Found Error but got %v", err)
+	// t.Errorf("expected %v, but got %v", commons.UserNotFoundError, err)
 	// }
 	assert.Equal(t, commons.UserNotFoundError, err)
 }
 
+// test function for testing incorrect otp error
 func TestValidateUserOTP_IncorrectOtp(t *testing.T) {
 	mockUser := &genericModels.User{
 		Username:     "Aman00",
@@ -53,11 +55,12 @@ func TestValidateUserOTP_IncorrectOtp(t *testing.T) {
 
 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
 	// if err != commons.IncorrectOTPError {
-	// 	t.Errorf("expected incorrect otp error, but got %v", err)
+	// t.Errorf("expected %v, but got %v", commons.IncorrectOTPError, err)
 	// }
 	assert.Equal(t, commons.IncorrectOTPError, err)
 }
 
+// test function for expired otp
 func TestValidateUserOTP_ExpiredOtp(t *testing.T) {
 	mockUser := &genericModels.User{
 		Username:     "Aman00",
@@ -78,12 +81,10 @@ func TestValidateUserOTP_ExpiredOtp(t *testing.T) {
 	}
 
 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
-	// if err != commons.OtpExpiredError {
-	// 	t.Errorf("expected OTP Expired Error but got %v", err)
-	// }
 	assert.Equal(t, commons.OtpExpiredError, err)
 }
 
+// test function for happy path request/ successful otp validation
 func TestValidateUserOTP_Success(t *testing.T) {
 	mockUser := &genericModels.User{
 		Username:     "Aman00",
