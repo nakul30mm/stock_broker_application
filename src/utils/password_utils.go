@@ -28,9 +28,7 @@ func CompareUserRequestOTP(OtpFromDB uint64, OtpFromRequest string) bool {
 	return OtpFromDB == parsedOTP
 }
 
-func CheckOtpExpiry(otpExpiresAt, requestTime time.Time) bool {
-	if requestTime.After(otpExpiresAt) {
-		return false
-	}
-	return true
+func CheckOtpExpiry(otpExpiresAtEpoch uint64, requestArrivalTime time.Time) bool {
+	requestArrivedAtEpoch := uint64(requestArrivalTime.Unix())
+	return requestArrivedAtEpoch <= otpExpiresAtEpoch
 }
