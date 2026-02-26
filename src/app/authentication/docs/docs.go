@@ -163,7 +163,7 @@ const docTemplate = `{
                         }
                     },
                     "401": {
-                        "description": "Incorrect OTP",
+                        "description": "Case A: Incorrect OTP / Case B: Expired OTP",
                         "schema": {
                             "$ref": "#/definitions/models.ErrorAPIResponse"
                         }

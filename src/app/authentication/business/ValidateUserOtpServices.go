@@ -1,10 +1,11 @@
 package business
 
 import (
-	"authentication/commons"
+	"authentication/commons/constants"
 	"authentication/models"
 	"authentication/repository"
 	"context"
+	"errors"
 	"stock_broker_application/src/utils"
 	"time"
 
@@ -35,15 +36,15 @@ func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, span
 	// postgresClinet := utils.GetPostgresClient().GormDB
 	userFromDB, errGettingUserFromDB := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)
 	if errGettingUserFromDB != nil {
-		return commons.UserNotFoundError
+		return errors.New(constants.ErrUserNotFound)
 	}
 
 	if !utils.CompareUserRequestOTP(userFromDB.OtpSent, bffValidateUserOtpRequest.Otp) {
-		return commons.IncorrectOTPError
+		return errors.New(constants.ErrIncorrectOtp)
 	}
 
 	if !utils.CheckOtpExpiry(userFromDB.OtpExpiresAt, time.Now()) {
-		return commons.OtpExpiredError
+		return errors.New(constants.ErrExpiredOtp)
 	}
 	return nil
 }
