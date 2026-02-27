@@ -51,5 +51,6 @@ const (
 	ErrIncorrectPassword = "entered password is not correct"
 	ErrOtpsMismatch      = "OTPs did not match"
 	ErrExpiredOtp        = "OTP expired"
-	ErrIncorrectOtp     = "entered OTP is not correct"
+	ErrIncorrectOtp      = "entered OTP is not correct"
+	ErrInvalidOtp        = "OTP must be a 4 digit number"
 )

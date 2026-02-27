@@ -1,7 +1,7 @@
 package business
 
 import (
-	"authentication/commons/constants"
+	"authentication/commons"
 	"authentication/models"
 	"authentication/repository"
 	"context"
@@ -34,17 +34,20 @@ func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpReposit
 // this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
 func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) error {
 	// postgresClinet := utils.GetPostgresClient().GormDB
-	userFromDB, errGettingUserFromDB := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)
-	if errGettingUserFromDB != nil {
-		return errors.New(constants.ErrUserNotFound)
+	userFromDB, err := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return commons.UserNotFoundError //errors.New(constants.ErrUserNotFound)
+		}
+		return err
 	}
 
 	if !utils.CompareUserRequestOTP(userFromDB.OtpSent, bffValidateUserOtpRequest.Otp) {
-		return errors.New(constants.ErrIncorrectOtp)
+		return commons.IncorrectOTPError //errors.New(constants.ErrIncorrectOtp)
 	}
 
 	if !utils.CheckOtpExpiry(userFromDB.OtpExpiresAt, time.Now()) {
-		return errors.New(constants.ErrExpiredOtp)
+		return commons.OtpExpiredError //errors.New(constants.ErrExpiredOtp)
 	}
 	return nil
 }
