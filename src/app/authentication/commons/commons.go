@@ -1,8 +1,8 @@
 package commons
 
 import (
-	"authentication/commons/constants"
 	"errors"
+	"authentication/commons/constants"
 	genericConstants "stock_broker_application/src/constants"
 )
 

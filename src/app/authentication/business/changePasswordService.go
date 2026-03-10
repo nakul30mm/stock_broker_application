@@ -4,6 +4,7 @@ import (
 	"authentication/commons"
 	"authentication/repository"
 	"context"
+	"errors"
 	"stock_broker_application/src/utils"
 
 	"gorm.io/gorm"
@@ -21,13 +22,16 @@ func NewChangePasswordService(repo repository.ChangePasswordRepository, db *gorm
 	}
 }
 
-// takes username, newpassword and contirmpassword - compares both passwords and updates in the table if user found and both passwords pass validations
+// takes username, newpassword and confirmpassword - compares both passwords and updates in the table if user found and both passwords pass validations
 func (service ChangePasswordService) ChangePassword(ctx context.Context, username string, newPassword string, confirmPassword string) error {
 	// postgresClient := utils.GetPostgresClient().GormDB //if did this way, testing would be difficult
 
 	_, err := service.repository.GetUserByUsername(ctx, service.db, username)
 	if err != nil {
-		return commons.UserNotFoundError
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return commons.UserNotFoundError
+		}
+		return err
 	}
 
 	hashedPassword, err := utils.HashPassword(newPassword)

@@ -104,7 +104,7 @@ func (controller *ValidateUserOtpHandler) HandleValidateUserOtp(ctx *gin.Context
 	}
 
 	ctx.IndentedJSON(http.StatusOK, models.BFFValidateUserOtpResponse{
-		Message:      constants.OtpValidatedSuccessMsg,
-		AccessToken:  accessToken,
+		Message:     constants.OtpValidatedSuccessMsg,
+		AccessToken: accessToken,
 	})
 }
