@@ -9,7 +9,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-var secretKey *models.JWT
+var SecretKey *models.JWT
 
 func GenerateToken(username string) (string, string, error) {
 
@@ -20,7 +20,7 @@ func GenerateToken(username string) (string, string, error) {
 		"exp":     time.Now().Add(time.Minute * 15).Unix(),
 	})
 
-	accessTokenString, err := accessToken.SignedString([]byte(secretKey.AccessSecretKey))
+	accessTokenString, err := accessToken.SignedString([]byte(SecretKey.AccessSecretKey))
 	if err != nil {
 		return "", "", err
 	}
@@ -32,7 +32,7 @@ func GenerateToken(username string) (string, string, error) {
 		"exp":     time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
 
-	refreshTokenString, err := refreshToken.SignedString([]byte(secretKey.RefreshSecretKey))
+	refreshTokenString, err := refreshToken.SignedString([]byte(SecretKey.RefreshSecretKey))
 	if err != nil {
 		return "", "", err
 	}
@@ -41,7 +41,7 @@ func GenerateToken(username string) (string, string, error) {
 
 func InitJWTConfig(configPath string) error {
 	var err error
-	secretKey, err = configs.LoadConfig[models.JWT](configPath, constants.JWT, constants.Yaml)
+	SecretKey, err = configs.LoadConfig[models.JWT](configPath, constants.JWT, constants.Yaml)
 	if err != nil {
 		return err
 	}
