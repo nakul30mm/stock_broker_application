@@ -12,7 +12,7 @@ import (
 
 type AdgStoWatchlistRepository interface {
 	GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error)
-	DelScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error)
+	DelScripFromWatchlists(ctx context.Context, db *gorm.DB, scripId string, watchlistIds []uint64) ([]uint64, error)
 	GetScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string) ([]uint64, error)
 	CheckIfScripExists(ctx context.Context, db *gorm.DB, scripId string) (bool, error)
 	GetUsersWatchlists(ctx context.Context, db *gorm.DB, userId uint64, watchlistIds []uint64) ([]uint64, []uint64, error)
@@ -32,7 +32,10 @@ func NewadgStoWatchlistsRepoitory() *adgStoWatchlistsRepository {
 func (repo *adgStoWatchlistsRepository) GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error) {
 	var user genericModels.User
 
-	result := db.WithContext(ctx).Table(constants.UsersTableName).Where(constants.Username, username).First(&user) //change table name
+	result := db.WithContext(ctx).
+	Table(constants.UsersTableName).
+	Where(constants.Username, username).
+	First(&user) //change table name
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, gorm.ErrRecordNotFound
@@ -181,7 +184,7 @@ func (repo *adgStoWatchlistsRepository) GetWatchlistDetails(ctx context.Context,
 
 // deleted the scripid in the request from the mentioned watchlists,
 // returns a []uint64 for the list of WIds from which a scrip is deleted
-func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error) {
+func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Context, db *gorm.DB, scripId string, watchlistIds []uint64) ([]uint64, error) {
 	deletedFrom := []uint64{}
 	return deletedFrom, nil
 }

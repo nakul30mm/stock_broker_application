@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"authentication/commons/constants"
+	"watchlists/commons/constants"
+
 	"encoding/json"
 	"net/http"
 	"watchlists/business"
@@ -32,6 +33,7 @@ func NewAdgStoWatchlistHandler(adgStoWatchlistService *business.AdgStoWatchlistS
 
 func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context) {
 	var bffAdgStoWatchlistRequest models.BffAdgStoWatchlistRequest
+	// reqAction := strings.ToLower((bffAdgStoWatchlistRequest.Action))
 
 	if err := ctx.ShouldBind(&bffAdgStoWatchlistRequest); err != nil {
 		errorMsg := genericModels.ErrorMessage{
@@ -53,10 +55,15 @@ func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context
 
 	username := ctx.GetString(commons.Username)
 
-	response, err := controller.AdgStoWatchlistService.AdgStoWatchlist(ctx, username, bffAdgStoWatchlistRequest)
+	warnings, respWatchlistsWithIds, err := controller.AdgStoWatchlistService.AdgStoWatchlist(ctx, username, bffAdgStoWatchlistRequest)
 	if err != nil {
 		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	ctx.IndentedJSON(http.StatusOK, response)
+	ctx.IndentedJSON(http.StatusOK, models.BffAdgStoWatchlistResponse{
+		Status:          "success",
+		Action:          constants.Actiontype("add"),
+		WatchlistWithId: respWatchlistsWithIds,
+		Warnings:        warnings,
+	})
 }
