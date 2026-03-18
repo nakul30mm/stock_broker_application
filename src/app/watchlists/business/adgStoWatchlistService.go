@@ -76,12 +76,6 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			warnings = append(warnings, fmt.Sprintf("scripId %s already exists in WatchlistIds: %v", request.ScripId, alreadyIn))
 		}
 		if len(addableTo) == 0 {
-			// return &models.BffAdgStoWatchlistResponse{
-			// 	Status:          "success",
-			// 	Action:          constants.Actiontype(ReqAction),
-			// 	WatchlistWithId: []models.WatchlistWithId{},
-			// 	Warnings:        warnings,
-			// }, nil
 			return warnings, nil, nil
 		}
 
@@ -105,12 +99,6 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			})
 		}
 
-		// return &models.BffAdgStoWatchlistResponse{
-		// 	Status:          "success",
-		// 	Action:          constants.Actiontype(reqAction),
-		// 	WatchlistWithId: respList,
-		// 	Warnings:        warnings,
-		// }, nil
 		return warnings, respWatchlistWithIds, nil
 
 	// case "del":

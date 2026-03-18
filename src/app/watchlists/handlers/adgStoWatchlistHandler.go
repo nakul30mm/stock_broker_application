@@ -18,13 +18,6 @@ type AdgStoWatchlistHandler struct {
 	AdgStoWatchlistService *business.AdgStoWatchlistService
 }
 
-type DummyResponse struct {
-	Status          string
-	Action          string
-	AddedTo         []uint64
-	AlreadyExistsIn []uint64
-}
-
 func NewAdgStoWatchlistHandler(adgStoWatchlistService *business.AdgStoWatchlistService) *AdgStoWatchlistHandler {
 	return &AdgStoWatchlistHandler{
 		AdgStoWatchlistService: adgStoWatchlistService,

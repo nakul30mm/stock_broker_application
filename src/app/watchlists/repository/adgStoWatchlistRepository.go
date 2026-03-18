@@ -33,9 +33,9 @@ func (repo *adgStoWatchlistsRepository) GetUserByUsername(ctx context.Context, d
 	var user genericModels.User
 
 	result := db.WithContext(ctx).
-	Table(constants.UsersTableName).
-	Where(constants.Username, username).
-	First(&user) //change table name
+		Table(constants.UsersTableName).
+		Where(constants.Username, username).
+		First(&user) //change table name
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			return nil, gorm.ErrRecordNotFound
