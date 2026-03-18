@@ -55,7 +55,7 @@ func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context
 	}
 	ctx.IndentedJSON(http.StatusOK, models.BffAdgStoWatchlistResponse{
 		Status:          "success",
-		Action:          constants.Actiontype("add"),
+		Action:          constants.Actiontype(bffAdgStoWatchlistRequest.Action),
 		WatchlistWithId: respWatchlistsWithIds,
 		Warnings:        warnings,
 	})

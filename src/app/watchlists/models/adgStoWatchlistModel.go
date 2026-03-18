@@ -19,10 +19,3 @@ type BffAdgStoWatchlistResponse struct {
 	WatchlistWithId []WatchlistWithId    `json:"watchlistNames"` //
 	Warnings        []string             `json:"warnings"`       //only while adding if a scrip already exists in a watchlist
 }
-
-type AdgStoWatchlistResult struct {
-	AddedTo     []uint64
-	ExistsIn    []uint64
-	DeletedFrom []uint64
-	FoundIn     []uint64
-}
