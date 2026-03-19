@@ -38,21 +38,22 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 
 	switch ReqAction {
 	case "add":
+		var warnings []string                              //for returning warnings
+		respWatchlistWithIds := []models.WatchlistWithId{} //if did using var, and if it remains empty, json returns null, but if we initialize it, json returns []
+
 		//check if scripid exists, if not give err and return
 		exists, err := service.adgStoWatchlistRepository.CheckIfScripExists(ctx, postgresClient, request.ScripId)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 		if !exists {
-			return nil, nil, errors.New(constants.ErrScripDoesnotExist)
+			return warnings, respWatchlistWithIds, errors.New(constants.ErrScripDoesnotExist)
 		}
-
-		var warnings []string
 
 		//check if all the mentioned watchlists belongs to the user, if not continue to check next watchlist
 		belongingWIds, notBelongingWIds, err := service.adgStoWatchlistRepository.GetUsersWatchlists(ctx, postgresClient, user.ID, request.WatchlistIds)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 		if len(notBelongingWIds) > 0 {
 			warnings = append(warnings, fmt.Sprintf("watchlistIds: %v, do not belong to the user", notBelongingWIds))
@@ -61,7 +62,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		//check scripCount in those watchlists, if >= 10, give warning and continue for adding to next watchlist
 		haveSpaceWIds, fullWIds, err := service.adgStoWatchlistRepository.GetWatchlistsWithCapacity(ctx, postgresClient, belongingWIds)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 		if len(fullWIds) > 0 {
 			warnings = append(warnings, fmt.Sprintf("watchlistIds: %v, already have 10 scrips", fullWIds))
@@ -69,26 +70,25 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 
 		alreadyIn, addableTo, err := service.adgStoWatchlistRepository.GetWatchlistsWithScrip(ctx, postgresClient, request.ScripId, haveSpaceWIds)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 		if len(alreadyIn) > 0 {
 			warnings = append(warnings, fmt.Sprintf("scripId %s already exists in WatchlistIds: %v", request.ScripId, alreadyIn))
 		}
 		if len(addableTo) == 0 {
-			return warnings, nil, nil
+			return warnings, respWatchlistWithIds, nil
 		}
 
 		addedTo, err := service.adgStoWatchlistRepository.AddScripToWatchlists(ctx, postgresClient, request.ScripId, addableTo)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 
 		watchlistDetails, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, addedTo)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 
-		respWatchlistWithIds := []models.WatchlistWithId{} //if did using var, and if it remains empty, json returns null, but if we initialize it, json returns []
 		for _, w := range watchlistDetails {
 			respWatchlistWithIds = append(respWatchlistWithIds, models.WatchlistWithId{
 				Id:   w.Id,
@@ -101,22 +101,23 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 	case "del":
 		//checking if the watchlists in the request belongs to the user
 		var warnings []string
+		respWatchlistWithIds := []models.WatchlistWithId{}
 
 		belongingWIds, notBelongingWIds, err := service.adgStoWatchlistRepository.GetUsersWatchlists(ctx, postgresClient, user.ID, request.WatchlistIds)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 		if len(notBelongingWIds) > 0 {
 			warnings = append(warnings, fmt.Sprintf("watchlistIds %v does not belong to the user", notBelongingWIds))
 		}
 
 		if len(belongingWIds) == 0 {
-			return nil, []models.WatchlistWithId{}, nil
+			return warnings, respWatchlistWithIds, nil
 		}
 
 		deletedFrom, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, request.ScripId, belongingWIds)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 
 		if len(deletedFrom) == 0 {
@@ -125,10 +126,9 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 
 		watchlists, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, deletedFrom)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithIds, err
 		}
 
-		respWatchlistWithIds := []models.WatchlistWithId{}
 		for _, w := range watchlists {
 			respWatchlistWithIds = append(respWatchlistWithIds, models.WatchlistWithId{
 				Id:   w.Id,
@@ -138,12 +138,14 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		return warnings, respWatchlistWithIds, nil
 
 	case "get":
+		warnings := []string{}
+		respWatchlistWithId := []models.WatchlistWithId{}
+
 		watchlists, err := service.adgStoWatchlistRepository.GetScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId)
 		if err != nil {
-			return nil, nil, err
+			return warnings, respWatchlistWithId, err
 		}
 
-		respWatchlistWithId := []models.WatchlistWithId{}
 		for _, w := range watchlists {
 			respWatchlistWithId = append(respWatchlistWithId, models.WatchlistWithId{
 				Id:   w.Id,
@@ -153,7 +155,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		if len(respWatchlistWithId) == 0 {
 			return []string{"scrip not found in any watchlist"}, respWatchlistWithId, nil
 		}
-		return nil, respWatchlistWithId, nil
+		return warnings, respWatchlistWithId, nil
 
 	default:
 		return nil, nil, errors.New(constants.ErrInvalidActiontype)

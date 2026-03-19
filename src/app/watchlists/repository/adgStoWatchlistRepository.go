@@ -156,7 +156,11 @@ func (repo *adgStoWatchlistsRepository) AddScripToWatchlists(ctx context.Context
 		err1 := db.WithContext(ctx).
 			Table("watchlists").
 			Where("id = ?", wId).
-			Update("scrip_count", gorm.Expr("scrip_count + 1")).Error
+			// Update("scrip_count", gorm.Expr("scrip_count + 1")).Error
+			Updates(map[string]interface{}{
+				"scrip_count":     gorm.Expr("scrip_count + 1"),
+				"last_updated_at": gorm.Expr("NOW()"),
+			}).Error
 		if err1 != nil {
 			return nil, err1
 		}
@@ -204,7 +208,6 @@ func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Conte
 		Table("watchlist_scrips").
 		Where("scrip_id = ? AND watchlist_id IN ?", scripId, deletedFrom).
 		Delete(&models.WatchlistScrip{}).Error
-
 	if err1 != nil {
 		return nil, err1
 	}
@@ -212,10 +215,12 @@ func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Conte
 	err2 := db.WithContext(ctx).
 		Table("watchlists").
 		Where("id IN ?", deletedFrom).
-		Update("scrip_count", gorm.Expr("scrip_count-1")).Error
-
+		Updates(map[string]interface{}{
+			"scrip_count":     gorm.Expr("GREATEST(scrip_count - 1, 0)"),
+			"last_updated_at": gorm.Expr("NOW()"),
+		}).Error
 	if err2 != nil {
-		return nil, err
+		return nil, err2
 	}
 
 	return deletedFrom, nil

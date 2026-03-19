@@ -1,21 +1,38 @@
 package models
 
-import "watchlists/commons/constants"
+import "strings"
 
 type BffAdgStoWatchlistRequest struct {
-	Action       constants.Actiontype `json:"action"` //ADD or  DEL or GET
-	ScripId      string               `json:"scripId"`
-	WatchlistIds []uint64             `json:"watchlistIds"`
+	Action       Actiontype `json:"action" example:"GET" validate:"required,actionChecker"` //ADD or  DEL or GET
+	ScripId      string     `json:"scripId" example:"RELI_2018" validate:"required"`
+	WatchlistIds []uint64   `json:"watchlistIds" example:"1,2,3" validate:"required_if=Action ADD required_if=Action DEL excluded_if=Action GET"`
 }
 
 type WatchlistWithId struct {
-	Id   uint64 `json:"id"`
-	Name string `json:"name"`
+	Id   uint64
+	Name string
 }
 
 type BffAdgStoWatchlistResponse struct {
-	Status          string               `json:"message"`        //success or failure, if succeded - descriptive message, if failed - failed adding/ deleting/ getting scrip to wathclist...
-	Action          constants.Actiontype `json:"action"`         //the one from the request
-	WatchlistWithId []WatchlistWithId    `json:"watchlistNames"` //
-	Warnings        []string             `json:"warnings"`       //only while adding if a scrip already exists in a watchlist
+	Status          string            `json:"status"`        //success or failure, if succeded - descriptive message, if failed - failed adding/ deleting/ getting scrip to wathclist...
+	Action          Actiontype        `json:"action"`         //the one from the request
+	WatchlistWithId []WatchlistWithId `json:"watchlistNames"` //
+	Warnings        []string          `json:"warnings"`       //only while adding if a scrip already exists in a watchlist
+}
+
+type Actiontype string
+
+const (
+	AddAction Actiontype = "ADD"
+	DelAction Actiontype = "DEL"
+	GetAction Actiontype = "GET"
+)
+
+func (action Actiontype) IsValid() bool {
+	actionString := strings.ToUpper(string(action))
+	switch actionString {
+	case "ADD", "DEL", "GET":
+		return true
+	}
+	return false
 }

@@ -8,6 +8,7 @@ const (
 
 // Request Validation Errors
 const (
-	ErrInvalidPayload  = "invalid required payload"
-	ErrUnexpectedValue = "unexpected value for the field."
+	ErrInvalidPayload               = "invalid required payload"
+	ErrUnexpectedValue              = "unexpected value for the field."
+	ErrFailedToAddScripToWatchlists = "failed to add scrip to watchlists"
 )

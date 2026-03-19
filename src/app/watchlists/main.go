@@ -12,6 +12,14 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// @title Watchlists ADG Service API
+// @version 1.0
+// @description Watchlists ADD DEL GET APIs for Stock Broker Application
+// @query.collection.format multi
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @x-extension-openapi {"example": "value on a json format"}
 func main() {
 	if err := utils.InitPostgresConfg(constants.BaseConfig); err != nil {
 		log.Fatalf(constants.ErrDBConnectionFailed, err)

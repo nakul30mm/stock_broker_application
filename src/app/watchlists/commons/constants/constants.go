@@ -1,13 +1,5 @@
 package constants
 
-type Actiontype string
-
-const (
-	AddAction Actiontype = "ADD"
-	DelAction Actiontype = "DEL"
-	GetAction Actiontype = "GET"
-)
-
 const (
 	UsersTableName = "users"
 	Username       = "username = ?"
