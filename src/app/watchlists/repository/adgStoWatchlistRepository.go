@@ -156,7 +156,7 @@ func (repo *adgStoWatchlistsRepository) AddScripToWatchlists(ctx context.Context
 		err1 := db.WithContext(ctx).
 			Table("watchlists").
 			Where("id = ?", wId).
-			Update("scrip_count", gorm.Expr("scrip_count + ?", 1)).Error
+			Update("scrip_count", gorm.Expr("scrip_count + 1")).Error
 		if err1 != nil {
 			return nil, err1
 		}
@@ -173,8 +173,7 @@ func (repo *adgStoWatchlistsRepository) GetWatchlistDetails(ctx context.Context,
 	err := db.WithContext(ctx).
 		Table("watchlists").
 		Where("id IN ?", addedTo).
-		Find(&watchlists).
-		Error
+		Find(&watchlists).Error
 
 	if err != nil {
 		return nil, err

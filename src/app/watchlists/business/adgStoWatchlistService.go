@@ -67,7 +67,6 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			warnings = append(warnings, fmt.Sprintf("watchlistIds: %v, already have 10 scrips", fullWIds))
 		}
 
-		//check if that scrip already exists in the watchlist, if not add, else add to warning
 		alreadyIn, addableTo, err := service.adgStoWatchlistRepository.GetWatchlistsWithScrip(ctx, postgresClient, request.ScripId, haveSpaceWIds)
 		if err != nil {
 			return nil, nil, err
@@ -79,23 +78,21 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			return warnings, nil, nil
 		}
 
-		//add the scrip in the request to the watchlists ini the request
 		addedTo, err := service.adgStoWatchlistRepository.AddScripToWatchlists(ctx, postgresClient, request.ScripId, addableTo)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		watchlists, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, addedTo)
+		watchlistDetails, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, addedTo)
 		if err != nil {
 			return nil, nil, err
 		}
 
 		respWatchlistWithIds := []models.WatchlistWithId{} //if did using var, and if it remains empty, json returns null, but if we initialize it, json returns []
-
-		for _, wtchlst := range watchlists {
+		for _, w := range watchlistDetails {
 			respWatchlistWithIds = append(respWatchlistWithIds, models.WatchlistWithId{
-				Id:   wtchlst.Id,
-				Name: wtchlst.WatchlistName,
+				Id:   w.Id,
+				Name: w.WatchlistName,
 			})
 		}
 
