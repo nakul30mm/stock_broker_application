@@ -100,27 +100,32 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 
 	case models.DelAction:
 		warnings := []string{}
-		resp := []models.WatchlistWithId{}
+		respWatchlistWithIds := []models.WatchlistWithId{}
 
 		deletedFrom, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
 		if err != nil {
-			return warnings, resp, err
+			return warnings, respWatchlistWithIds, err
 		}
 
 		if len(deletedFrom) == 0 {
-			return warnings, resp, constants.ScripNotInWatchlistsError
+			return warnings, respWatchlistWithIds, constants.ScripNotInWatchlistsError
 		}
 
 		if len(deletedFrom) != len(request.WatchlistIds) {
 			warnings = append(warnings, "some watchlists were invalid or did not contain the scrip")
 		}
 
-		for _, id := range deletedFrom {
-			resp = append(resp, models.WatchlistWithId{
-				Id: id,
+		response, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, deletedFrom)
+		if err != nil {
+			return warnings, respWatchlistWithIds, err
+		}
+		for _, w := range response {
+			respWatchlistWithIds = append(respWatchlistWithIds, models.WatchlistWithId{
+				Id:   w.Id,
+				Name: w.WatchlistName,
 			})
 		}
-		return warnings, resp, nil
+		return warnings, respWatchlistWithIds, nil
 
 	case models.GetAction:
 		warnings := []string{}
