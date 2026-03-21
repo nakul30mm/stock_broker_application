@@ -4,8 +4,8 @@ import "strings"
 
 type BffAdgStoWatchlistRequest struct {
 	Action       Actiontype `json:"action" example:"GET" validate:"required,actionChecker"` //ADD or  DEL or GET
-	ScripId      string     `json:"scripId" example:"RELI_2018" validate:"required"`
-	WatchlistIds []uint64   `json:"watchlistIds" example:"1,2,3" validate:"required_if=Action ADD required_if=Action DEL excluded_if=Action GET"`
+	ScripId      string     `json:"scripId" example:"RELI" validate:"required"`
+	WatchlistIds []uint64   `json:"watchlistIds,omitempty" example:"1,2,3" validate:"required_if=Action ADD required_if=Action DEL excluded_if=Action GET"`
 }
 
 type WatchlistWithId struct {
@@ -14,7 +14,7 @@ type WatchlistWithId struct {
 }
 
 type BffAdgStoWatchlistResponse struct {
-	Status          string            `json:"status"`        //success or failure, if succeded - descriptive message, if failed - failed adding/ deleting/ getting scrip to wathclist...
+	Status          string            `json:"status"`         //success or failure, if succeded - descriptive message, if failed - failed adding/ deleting/ getting scrip to wathclist...
 	Action          Actiontype        `json:"action"`         //the one from the request
 	WatchlistWithId []WatchlistWithId `json:"watchlistNames"` //
 	Warnings        []string          `json:"warnings"`       //only while adding if a scrip already exists in a watchlist
@@ -31,7 +31,7 @@ const (
 func (action Actiontype) IsValid() bool {
 	actionString := strings.ToUpper(string(action))
 	switch actionString {
-	case "ADD", "DEL", "GET":
+	case string(AddAction), string(DelAction), string(GetAction):
 		return true
 	}
 	return false
