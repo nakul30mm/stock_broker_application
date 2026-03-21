@@ -143,13 +143,16 @@ type Enum interface {
 
 // ValidateEnum is a validation function that chekcs if the value of a filed implements the Enum interface and is valid.
 func ValidateEnum[E Enum](f1 validator.FieldLevel) bool {
-	val := f1.Field().Interface().(E)
+	val, ok := f1.Field().Interface().(E)
+	if !ok {
+		return false
+	}
 	return val.IsValid()
 }
 
-func IdChecker() {
+// func IdChecker() {
 
-}
+// }
 
 func init() {
 	bffValidator = validator.New()

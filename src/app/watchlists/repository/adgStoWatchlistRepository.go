@@ -8,11 +8,12 @@ import (
 	"watchlists/commons/constants"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AdgStoWatchlistRepository interface {
 	GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error)
-	DelScripFromWatchlists(ctx context.Context, db *gorm.DB, scripId string, watchlistIds []uint64) ([]uint64, error)
+	DelScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error)
 	GetScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string) ([]models.Watchlist, error)
 	CheckIfScripExists(ctx context.Context, db *gorm.DB, scripId string) (bool, error)
 	GetUsersWatchlists(ctx context.Context, db *gorm.DB, userId uint64, watchlistIds []uint64) ([]uint64, []uint64, error)
@@ -61,12 +62,12 @@ func (repo *adgStoWatchlistsRepository) CheckIfScripExists(ctx context.Context, 
 func (repo *adgStoWatchlistsRepository) GetUsersWatchlists(ctx context.Context, db *gorm.DB, userId uint64, watchlistIds []uint64) ([]uint64, []uint64, error) {
 	var belongingWIds []uint64
 
-	err := db.WithContext(ctx).
+	result := db.WithContext(ctx).
 		Table("watchlists").
 		Where("user_id = ? AND id IN ?", userId, watchlistIds).
-		Pluck("id", &belongingWIds).Error
-	if err != nil {
-		return nil, nil, err
+		Pluck("id", &belongingWIds)
+	if result.Error != nil {
+		return nil, nil, errors.New("db query error")
 	}
 
 	belongMap := make(map[uint64]bool)
@@ -186,61 +187,81 @@ func (repo *adgStoWatchlistsRepository) GetWatchlistDetails(ctx context.Context,
 	return watchlists, nil
 }
 
-// deleted the scripid in the request from the mentioned watchlists,
-// returns a []uint64 for the list of WIds from which a scrip is deleted
-func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Context, db *gorm.DB, scripId string, watchlistIds []uint64) ([]uint64, error) {
-	deletedFrom := []uint64{}
-	err := db.WithContext(ctx).
-		Table("watchlist_scrips").
-		Select("watchlist_id").
-		Where("scrip_id = ? AND watchlist_id IN ?", scripId, watchlistIds).
-		Pluck("watchlist_id", &deletedFrom).Error
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(deletedFrom) == 0 {
-		return deletedFrom, nil
-	}
-
-	err1 := db.WithContext(ctx).
-		Table("watchlist_scrips").
-		Where("scrip_id = ? AND watchlist_id IN ?", scripId, deletedFrom).
-		Delete(&models.WatchlistScrip{}).Error
-	if err1 != nil {
-		return nil, err1
-	}
-
-	err2 := db.WithContext(ctx).
-		Table("watchlists").
-		Where("id IN ?", deletedFrom).
-		Updates(map[string]interface{}{
-			"scrip_count":     gorm.Expr("GREATEST(scrip_count - 1, 0)"),
-			"last_updated_at": gorm.Expr("NOW()"),
-		}).Error
-	if err2 != nil {
-		return nil, err2
-	}
-
-	return deletedFrom, nil
-}
-
 // returns the list of watchlists in which the scrip is present,
 // returns a []uint64 for the list of WIds in which the scrip is present
 func (repo *adgStoWatchlistsRepository) GetScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string) ([]models.Watchlist, error) {
 	var watchlists []models.Watchlist
 
 	err := db.WithContext(ctx).
-		Table("watchlists AS w").
-		Select("w.id, w.watchlist_name").
-		Joins("JOIN watchlist_scrips ws ON w.id = ws.watchlist_id").
-		Where("w.user_id = ? AND ws.scrip_id = ?", userId, scripId).
+		Table(constants.WatchlistsTableName+" AS w").
+		// Select("w.id, w.watchlist_name").
+		Select("w."+constants.FieldId+", w."+constants.FieldWatchlistName).
+		// Joins("JOIN watchlist_scrips ws ON w.id = ws.watchlist_id").
+		Joins("JOIN "+constants.WatchlistScripsTableName+" AS ws ON w."+constants.FieldId+" = ws."+constants.FieldWatchlistId).
+		// Where("w.user_id = ? AND ws.scrip_id = ?", userId, scripId).
+		Where("w."+constants.FieldUserId+" = ? AND ws."+constants.FieldScripId+" = ?", userId, scripId).
 		Find(&watchlists).Error
-
 	if err != nil {
-		return nil, err
+		return nil, constants.DatabaseQueryError
 	}
 
 	return watchlists, nil
+}
+
+// deletes the scripid in the request from the mentioned watchlists,
+// returns a []uint64 for the list of WIds from which a scrip is deleted
+func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error) {
+	// 	if len(watchlistIds) == 0 {
+	// 		return []uint64{}, nil
+	// 	}
+	userWatchlists := []uint64{}
+
+	err := db.WithContext(ctx).
+		Table(constants.WatchlistsTableName).
+		Where(constants.FieldUserId+" = ? AND "+constants.FieldId+" IN ?", userId, watchlistIds).
+		Pluck(constants.FieldId, &userWatchlists).Error
+
+	if err != nil {
+		return []uint64{}, constants.DatabaseQueryError
+	}
+
+	if len(userWatchlists) == 0 {
+		return userWatchlists, nil
+	}
+
+	deletedRecords := []models.WatchlistScrip{}
+
+	err = db.WithContext(ctx).
+		Table(constants.WatchlistScripsTableName).
+		Clauses(clause.Returning{}).
+		Where(constants.FieldScripId+" = ? AND "+constants.FieldWatchlistId+" IN ?", scripId, userWatchlists).
+		Delete(&deletedRecords).Error
+
+	if err != nil {
+		return nil, constants.DatabaseQueryError
+	}
+
+	deletedFrom := []uint64{}
+	for _, rec := range deletedRecords {
+		deletedFrom = append(deletedFrom, rec.WatchlistId)
+	}
+
+	if len(deletedFrom) == 0 {
+		return deletedFrom, nil
+	}
+
+	err = db.WithContext(ctx).
+		Table(constants.WatchlistsTableName).
+		Where(constants.FieldId+" IN ?", deletedFrom).
+		Updates(map[string]interface{}{
+			constants.FieldScripCount:    gorm.Expr("GREATEST(scrip_count - 1, 0)"),
+			constants.FieldLastUpdatedAt: gorm.Expr("NOW()"),
+		}).Error
+
+	if err != nil {
+		return nil, constants.DatabaseQueryError
+	}
+
+	return deletedFrom, nil
+
 }

@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
+	"strings"
 	"watchlists/commons/constants"
 
 	"encoding/json"
@@ -42,7 +45,6 @@ func NewAdgStoWatchlistHandler(adgStoWatchlistService *business.AdgStoWatchlistS
 // @Router /adg/scrip [post]
 func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context) {
 	var bffAdgStoWatchlistRequest models.BffAdgStoWatchlistRequest
-	// reqAction := strings.ToLower((bffAdgStoWatchlistRequest.Action))
 
 	if err := ctx.ShouldBind(&bffAdgStoWatchlistRequest); err != nil {
 		errorMsg := genericModels.ErrorMessage{
@@ -56,23 +58,85 @@ func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context
 		return
 	}
 
-	if err := validations.GetBFFValidator().Struct(&bffAdgStoWatchlistRequest); err != nil {
+	err := validations.GetBFFValidator().Struct(&bffAdgStoWatchlistRequest)
+	if err != nil {
 		validationError, _ := validations.FormatValidationErrors(err)
 		ctx.IndentedJSON(http.StatusBadRequest, validationError)
 		return
 	}
 
 	username := ctx.GetString(commons.Username)
+	ReqAction := models.Actiontype(strings.ToUpper(string(bffAdgStoWatchlistRequest.Action)))
 
 	warnings, respWatchlistsWithIds, err := controller.AdgStoWatchlistService.AdgStoWatchlist(ctx, username, bffAdgStoWatchlistRequest)
 	if err != nil {
-		ctx.IndentedJSON(http.StatusBadRequest, err.Error())
-		return
-	}
+		fmt.Println("ERROR:", err)
 
+		switch {
+		case errors.Is(err, constants.UserNotFoundError):
+			ctx.IndentedJSON(http.StatusNotFound, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.UserID,
+					ErrorMessage: constants.ErrUserNotFound,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		case errors.Is(err, constants.DatabaseQueryError):
+			ctx.IndentedJSON(http.StatusInternalServerError, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.Database,
+					ErrorMessage: constants.ErrDatabaseQuery,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		case errors.Is(err, constants.ScripNotFoundError):
+			ctx.IndentedJSON(http.StatusNotFound, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.ScripID,
+					ErrorMessage: constants.ErrScripDoesnotExist,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		case errors.Is(err, constants.ScripNotInWatchlistsError):
+			ctx.IndentedJSON(http.StatusNotFound, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.ScripID,
+					ErrorMessage: constants.ErrScripNotInWatchlists,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		case errors.Is(err, constants.InvalidActionTypeError):
+			ctx.IndentedJSON(http.StatusBadRequest, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.Action,
+					ErrorMessage: constants.ErrInvalidActiontype,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		default:
+			ctx.IndentedJSON(http.StatusInternalServerError, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.Server,
+					ErrorMessage: constants.InternalServerError,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+		}
+	}
 	ctx.IndentedJSON(http.StatusOK, models.BffAdgStoWatchlistResponse{
-		Status:          "success",
-		Action:          models.Actiontype(bffAdgStoWatchlistRequest.Action),
+		Status:          "successful",
+		Action:          ReqAction,
 		WatchlistWithId: respWatchlistsWithIds,
 		Warnings:        warnings,
 	})
