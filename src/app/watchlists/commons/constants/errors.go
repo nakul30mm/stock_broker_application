@@ -12,6 +12,8 @@ const (
 	ErrScripDoesnotExist = "scrip does not exist"
 	ErrUserNotFound      = "user does not exist"
 	ErrDatabaseQuery     = "database query error"
+	ErrInvalidWatchists  = "all watchlists are invalid"
+	ErrAllWatchlistsFull = "no watchlists of the user have capacity"
 )
 
 // Request Validation Errors
@@ -30,6 +32,8 @@ var (
 	ScripNotInWatchlistsError = errors.New(ErrScripNotInWatchlists)
 	UserNotFoundError         = gorm.ErrRecordNotFound
 	InvalidActionTypeError    = errors.New(ErrInvalidActiontype)
+	InvalidWatchlistsError    = errors.New(ErrInvalidWatchists)
+	AllWatchlistsFullError    = errors.New(ErrAllWatchlistsFull)
 )
 
 const (

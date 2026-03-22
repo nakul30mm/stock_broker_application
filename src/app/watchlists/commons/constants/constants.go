@@ -17,6 +17,7 @@ const (
 const (
 	WatchlistsTableName      = "watchlists"
 	WatchlistScripsTableName = "watchlist_scrips"
+	ScripMastersTableName    = "scrip_masters"
 	FieldUserId              = "user_id"
 	FieldId                  = "id"
 	FieldScripId             = "scrip_id"

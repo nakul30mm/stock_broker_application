@@ -113,11 +113,31 @@ func (controller *AdgStoWatchlistHandler) HandleAdgStoWatchlist(ctx *gin.Context
 			})
 			return
 
+		case errors.Is(err, constants.InvalidWatchlistsError):
+			ctx.IndentedJSON(http.StatusNotFound, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.WatchlistID,
+					ErrorMessage: constants.ErrInvalidWatchists,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
 		case errors.Is(err, constants.InvalidActionTypeError):
 			ctx.IndentedJSON(http.StatusBadRequest, genericModels.ErrorAPIResponse{
 				Message: genericModels.ErrorMessage{
 					Key:          constants.Action,
 					ErrorMessage: constants.ErrInvalidActiontype,
+				},
+				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
+			})
+			return
+
+		case errors.Is(err, constants.AllWatchlistsFullError):
+			ctx.IndentedJSON(http.StatusNotFound, genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{
+					Key:          constants.WatchlistID,
+					ErrorMessage: constants.ErrAllWatchlistsFull,
 				},
 				Error: fmt.Sprintf(constants.ErrRequestFailed, ReqAction),
 			})
