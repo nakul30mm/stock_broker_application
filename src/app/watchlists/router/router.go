@@ -30,7 +30,7 @@ func GetRouter() *gin.Engine {
 		AllowHeaders: []string{genericConstants.Origin, genericConstants.ContentType, genericConstants.Authorization},
 	}))
 
-	adgScripRepository := repository.NewadgStoWatchlistsRepoitory()
+	adgScripRepository := repository.NewadgStoWatchlistsRepository()
 	adgScripService := business.NewadgStoWatchlistService(adgScripRepository)
 	adgScripHandler := handlers.NewAdgStoWatchlistHandler(adgScripService)
 
