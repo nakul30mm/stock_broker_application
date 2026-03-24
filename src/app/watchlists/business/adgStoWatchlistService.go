@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"fmt"
 	"stock_broker_application/src/utils"
 	"strings"
 	"watchlists/commons/constants"
@@ -122,7 +123,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		warnings := []string{}
 		respWatchlistWithIds := []models.WatchlistWithId{}
 
-		userWatchlists, deletedFrom, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
+		userWatchlists, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
@@ -130,15 +131,25 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			return warnings, respWatchlistWithIds, constants.InvalidWatchlistsError
 		}
 
-		if len(deletedFrom) == 0 {
-			return warnings, respWatchlistWithIds, constants.ScripNotInWatchlistsError
+		//check for invalid ids for warnings
+		usersIdsMap := make(map[uint64]bool)
+		inValidIds := []uint64{}
+
+		for _, id := range userWatchlists {
+			usersIdsMap[id] = true
 		}
 
-		if len(deletedFrom) != len(request.WatchlistIds) {
-			warnings = append(warnings, "some watchlists were invalid or did not contain the scrip")
+		for _, id := range request.WatchlistIds {
+			if !usersIdsMap[id] {
+				inValidIds = append(inValidIds, id)
+			}
 		}
 
-		response, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, deletedFrom)
+		if len(inValidIds) > 0 {
+			warnings = append(warnings, fmt.Sprintf("watchlistIds %v do not belong to the user", inValidIds))
+		}
+
+		response, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, userWatchlists)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
