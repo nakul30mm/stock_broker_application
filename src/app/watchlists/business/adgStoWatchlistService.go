@@ -123,11 +123,11 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		warnings := []string{}
 		respWatchlistWithIds := []models.WatchlistWithId{}
 
-		userWatchlists, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
+		validWatchlists, err := service.adgStoWatchlistRepository.DelScripFromWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
-		if len(userWatchlists) == 0 {
+		if len(validWatchlists) == 0 {
 			return warnings, respWatchlistWithIds, constants.InvalidWatchlistsError
 		}
 
@@ -135,7 +135,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		usersIdsMap := make(map[uint64]bool)
 		inValidIds := []uint64{}
 
-		for _, id := range userWatchlists {
+		for _, id := range validWatchlists {
 			usersIdsMap[id] = true
 		}
 
@@ -149,7 +149,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			warnings = append(warnings, fmt.Sprintf("watchlistIds %v do not belong to the user", inValidIds))
 		}
 
-		response, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, userWatchlists)
+		response, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, validWatchlists)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
