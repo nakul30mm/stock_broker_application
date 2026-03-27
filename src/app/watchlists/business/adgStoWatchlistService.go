@@ -38,75 +38,56 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 
 	switch ReqAction {
 	case models.AddAction:
-		// warnings := []string{}
-		// respWatchlistsWithIds := []models.WatchlistWithId{}
-
-		// watchlists, finalIds, full, existing, err := service.adgStoWatchlistRepository.AddScripToWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
-		// if err != nil {
-		// 	return warnings, respWatchlistsWithIds, err
-		// }
-
-		// if len(watchlists) == 0 {
-		// 	return warnings, respWatchlistsWithIds, constants.InvalidWatchlistsError
-		// }
-
-		// if len(finalIds) == 0 {
-		// 	return warnings, respWatchlistsWithIds, constants.AllWatchlistsFullError
-		// }
-
-		// if len(full) > 0 {
-		// 	warnings = append(warnings, fmt.Sprintf("watchlistIds %v already have 10 scrips", full))
-		// }
-
-		// if len(existing) > 0 {
-		// 	warnings = append(warnings, fmt.Sprintf("watchlistIds %v already have scripId %s", existing, request.ScripId))
-		// }
-
-		// validMap := make(map[uint64]bool)
-		// for _, w := range watchlists {
-		// 	validMap[w.Id] = true
-		// }
-
-		// invalid := []uint64{}
-		// for _, id := range request.WatchlistIds {
-		// 	if !validMap[id] {
-		// 		invalid = append(invalid, id)
-		// 	}
-		// }
-
-		// if len(invalid) > 0 {
-		// 	warnings = append(warnings, fmt.Sprintf("watchlistIds %v are invalid", invalid))
-		// }
-
-		// resp, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, finalIds)
-		// if err != nil {
-		// 	return nil, nil, err
-		// }
-		// for _, r := range resp {
-		// 	respWatchlistsWithIds = append(respWatchlistsWithIds, models.WatchlistWithId{
-		// 		Id:   r.Id,
-		// 		Name: r.WatchlistName,
-		// 	})
-		// }
-		// return warnings, respWatchlistsWithIds, nil
-
 		warnings := []string{}
 		respWatchlistWithIds := []models.WatchlistWithId{}
 
-		addedIds, err := service.adgStoWatchlistRepository.AddScripToWatchlistss(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
+		validIds, insertedIds, err := service.adgStoWatchlistRepository.AddScripToWatchlistss(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
 
-		if len(addedIds) == 0 { //dont append to warning, return error.
-			// warnings = append(warnings, "scrip was not added to any watchlists - maybe full, already contain the scrip or invalid")
-			return warnings, respWatchlistWithIds, constants.ScripNotAddedToAnyWatchlistsError
-		}
-		if len(addedIds) < len(request.WatchlistIds) {
-			warnings = append(warnings, "scrip was not added to some watchlists")
+		//no valid watchlists in the request - error
+		if len(validIds) == 0 {
+			return warnings, respWatchlistWithIds, constants.InvalidWatchlistsError
 		}
 
-		resp, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, addedIds)
+		//not inserted into any watchlists
+		if len(insertedIds) == 0 {
+			warnings = append(warnings, "scrip not added to any watchlist maybe full or duplicate")
+			return warnings, respWatchlistWithIds, nil
+		}
+
+		//list of invalid watchlistIds
+		invalidIds := []uint64{}
+		validMap := make(map[uint64]bool)
+		for _, id := range validIds {
+			validMap[id] = true
+		}
+		for _, id := range request.WatchlistIds {
+			if !validMap[id] {
+				invalidIds = append(invalidIds, id)
+			}
+		}
+		if len(invalidIds) > 0 {
+			warnings = append(warnings, fmt.Sprintf("watchlistIds %v does not belong to the user", invalidIds))
+		}
+
+		//watchlistIds taht already had the scrip or were full
+		skippedIds := []uint64{}
+		skippedMap := make(map[uint64]bool)
+		for _, id := range insertedIds {
+			skippedMap[id] = true
+		}
+		for _, id := range validIds {
+			if !skippedMap[id] {
+				skippedIds = append(skippedIds, id)
+			}
+		}
+		if len(skippedIds) > 0 {
+			warnings = append(warnings, fmt.Sprintf("scrip not added to watchlistIds %v, either full or duplicate", skippedIds))
+		}
+
+		resp, err := service.adgStoWatchlistRepository.GetWatchlistDetails(ctx, postgresClient, insertedIds)
 		if err != nil {
 			return warnings, respWatchlistWithIds, constants.DatabaseQueryError
 		}

@@ -23,7 +23,7 @@ const (
 	ErrUnexpectedValue              = "unexpected value for the field."
 	ErrFailedToAddScripToWatchlists = "failed to add scrip to watchlists"
 	ErrScripNotInWatchlists         = "scrip does not exist in any watchlists of the user"
-	ErrScripNotAddedToAnyWatchlists = "scrip was not added to any watchlist - maybe full or duplicate or invalid"
+	ErrScripNotAddedToAnyWatchlists = "scrip was not added to any watchlist - maybe full or duplicate"
 )
 
 // errors

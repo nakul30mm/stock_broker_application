@@ -17,7 +17,7 @@ type AdgStoWatchlistRepository interface {
 	DelScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error)
 	GetScripFromWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string) ([]models.Watchlist, error)
 	// AddScripToWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]models.Watchlist, []uint64, []uint64, []uint64, error)
-	AddScripToWatchlistss(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error)
+	AddScripToWatchlistss(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, []uint64, error)
 }
 
 type adgStoWatchlistsRepository struct{}
@@ -157,135 +157,59 @@ func (repo *adgStoWatchlistsRepository) DelScripFromWatchlists(ctx context.Conte
 	return validWatchlists, nil
 }
 
-// func (repo *adgStoWatchlistsRepository) AddScripToWatchlists(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]models.Watchlist, []uint64, []uint64, []uint64, error) {
-// 	//chck for existwnce of scrip
-// 	var count int64
-// 	err := db.WithContext(ctx).
-// 		Table(constants.ScripMastersTableName).
-// 		Where(constants.FieldId+" = ?", scripId).
-// 		Count(&count).Error
-// 	if err != nil {
-// 		return nil, nil, nil, nil, constants.DatabaseQueryError
-// 	}
-// 	if count == 0 {
-// 		return nil, nil, nil, nil, constants.ScripDoesNotExistError
-// 	}
+func (repo *adgStoWatchlistsRepository) AddScripToWatchlistss(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, []uint64, error) {
 
-// 	//fetching user's watchlists
-// 	var watchlists []models.Watchlist
-// 	err = db.WithContext(ctx).
-// 		Table(constants.WatchlistsTableName).
-// 		Select(constants.FieldId, constants.FieldWatchlistName, constants.FieldScripCount).
-// 		Where(constants.FieldUserId+" = ? AND "+constants.FieldId+" IN ?", userId, watchlistIds).
-// 		Find(&watchlists).Error
-// 	if err != nil {
-// 		return nil, nil, nil, nil, constants.DatabaseQueryError
-// 	}
+	type Result struct {
+		ValidWatchlistIds    uint64  `gorm:"column:valid_watchlist_ids"`
+		InsertedWatchlistIds *uint64 `gorm:"column:inserted_watchlist_ids"` //ptr because all vw.id will appear, but ir.watchlist_id maybe null, go has no null for uint64,
+		// so when took ptr, corresponding value for null becomes nil in go
+	}
 
-// 	if len(watchlists) == 0 {
-// 		return watchlists, nil, nil, nil, nil
-// 	}
+	results := []Result{}
+	valid := []uint64{}
+	inserted := []uint64{}
 
-// 	//checking capacity
-// 	var elligible []uint64
-// 	var full []uint64
-
-// 	for _, w := range watchlists {
-// 		if w.ScripCount >= 10 {
-// 			full = append(full, w.Id)
-// 		} else {
-// 			elligible = append(elligible, w.Id)
-// 		}
-// 	}
-
-// 	//checking duplicates
-// 	var existingIds []uint64
-
-// 	err = db.WithContext(ctx).
-// 		Table(constants.WatchlistScripsTableName).
-// 		Where(constants.FieldWatchlistId+" IN ? AND "+constants.FieldScripId+" = ?", elligible, scripId).
-// 		Pluck(constants.FieldWatchlistId, &existingIds).Error
-// 	if err != nil {
-// 		return nil, nil, nil, nil, constants.DatabaseQueryError
-// 	}
-
-// 	existsMap := make(map[uint64]bool)
-// 	for _, id := range existingIds {
-// 		existsMap[id] = true
-// 	}
-
-// 	//inserting list
-// 	var finalIds []uint64
-
-// 	for _, id := range elligible {
-// 		if !existsMap[id] {
-// 			finalIds = append(finalIds, id)
-// 		}
-// 	}
-
-// 	//insertion
-// 	var inserts []models.WatchlistScrip
-// 	for _, id := range finalIds {
-// 		inserts = append(inserts, genericModels.WatchlistScrip{
-// 			WatchlistId: id,
-// 			ScripId:     scripId,
-// 		})
-// 	}
-// 	if len(inserts) > 0 {
-// 		err := db.WithContext(ctx).
-// 			Table(constants.WatchlistScripsTableName).
-// 			Create(&inserts).Error
-// 		if err != nil {
-// 			return nil, nil, nil, nil, constants.DatabaseQueryError
-// 		}
-
-// 		//updating the count and timestamp
-// 		err = db.WithContext(ctx).
-// 			Table(constants.WatchlistsTableName).
-// 			Where(constants.FieldId+" IN ?", finalIds).
-// 			Updates(map[string]interface{}{
-// 				constants.FieldScripCount:    gorm.Expr("scrip_count + 1"),
-// 				constants.FieldLastUpdatedAt: gorm.Expr("NOW()"),
-// 			}).Error
-
-// 		if err != nil {
-// 			return nil, nil, nil, nil, constants.DatabaseQueryError
-// 		}
-// 	}
-
-// return watchlists, finalIds, full, existingIds, nil
-// }
-
-func (repo *adgStoWatchlistsRepository) AddScripToWatchlistss(ctx context.Context, db *gorm.DB, userId uint64, scripId string, watchlistIds []uint64) ([]uint64, error) {
-	var addedIds []uint64
-	err := db.WithContext(ctx).Raw(`
-		INSERT INTO watchlist_scrips (watchlist_id, scrip_id) 
-		SELECT w.id, ? 
-		FROM watchlists w 
-		WHERE w.user_id = ? 
-		AND w.id IN ? 
-		AND w.scrip_count < ? 
-		ON CONFLICT (watchlist_id, scrip_id) DO NOTHING 
-		RETURNING watchlist_id`,
-		scripId, userId, watchlistIds, 10).
-		Scan(&addedIds).Error
+	query := `
+	WITH valid_watchlists AS (
+			SELECT id, scrip_count
+			FROM watchlists w
+			WHERE w.id IN (?)
+			AND w.user_id = ?
+		),
+		insert_records AS (
+			INSERT INTO watchlist_scrips (watchlist_id, scrip_id)
+			SELECT vw.id, ?
+			FROM valid_watchlists vw
+			WHERE vw.scrip_count < 10
+			ON CONFLICT (watchlist_id, scrip_id) DO NOTHING
+			RETURNING watchlist_id  
+		),
+		update_count AS (
+			UPDATE watchlists
+			SET scrip_count = scrip_count + 1,
+				last_updated_at = NOW()
+			WHERE id IN (SELECT watchlist_id FROM insert_records)
+		)
+		SELECT vw.id AS valid_watchlist_ids,
+			ir.watchlist_id AS inserted_watchlist_ids
+		FROM valid_watchlists AS vw
+		LEFT JOIN insert_records AS ir
+			ON vw.id = ir.watchlist_id;
+	`
+	err := db.WithContext(ctx).Raw(query, watchlistIds, userId, scripId).Scan(&results).Error
 	if err != nil {
-		// if errors.Is(err, gorm.ErrForeignKeyViolated) { //or if did not work- strings.contains(err, "foreign key")
-		// 	return addedIds, constants.ScripDoesNotExistError
-		// }
 		if strings.Contains(strings.ToLower(err.Error()), "foreign key") {
-			return addedIds, constants.ScripDoesNotExistError
+			return nil, nil, constants.ScripDoesNotExistError
+		}
+		return nil, nil, err
+	}
+
+	for _, res := range results {
+		valid = append(valid, res.ValidWatchlistIds)
+		if res.InsertedWatchlistIds != nil {
+			inserted = append(inserted, *res.InsertedWatchlistIds)
 		}
 	}
 
-	if len(addedIds) > 0 {
-		err := db.WithContext(ctx).Table(constants.WatchlistsTableName).Where(constants.FieldId+" IN ?", addedIds).Updates(map[string]interface{}{
-			constants.FieldScripCount:    gorm.Expr(constants.FieldScripCount + " + 1"),
-			constants.FieldLastUpdatedAt: gorm.Expr("NOW()"),
-		}).Error
-		if err != nil {
-			return addedIds, constants.DatabaseQueryError
-		}
-	}
-	return addedIds, nil
+	return valid, inserted, nil
 }
