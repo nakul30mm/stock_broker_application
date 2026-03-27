@@ -41,7 +41,7 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		warnings := []string{}
 		respWatchlistWithIds := []models.WatchlistWithId{}
 
-		validIds, insertedIds, err := service.adgStoWatchlistRepository.AddScripToWatchlistss(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
+		validIds, insertedIds, err := service.adgStoWatchlistRepository.AddScripToWatchlists(ctx, postgresClient, user.ID, request.ScripId, request.WatchlistIds)
 		if err != nil {
 			return warnings, respWatchlistWithIds, err
 		}
@@ -49,12 +49,6 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 		//no valid watchlists in the request - error
 		if len(validIds) == 0 {
 			return warnings, respWatchlistWithIds, constants.InvalidWatchlistsError
-		}
-
-		//not inserted into any watchlists
-		if len(insertedIds) == 0 {
-			warnings = append(warnings, "scrip not added to any watchlist maybe full or duplicate")
-			return warnings, respWatchlistWithIds, nil
 		}
 
 		//list of invalid watchlistIds
@@ -154,12 +148,8 @@ func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, user
 			return warnings, respWatchlistWithId, constants.ScripNotInWatchlistsError
 		}
 
-		for _, w := range watchlists {
-			respWatchlistWithId = append(respWatchlistWithId, models.WatchlistWithId{
-				Id:   w.Id,
-				Name: w.WatchlistName,
-			})
-		}
+		respWatchlistWithId = watchlists
+
 		return warnings, respWatchlistWithId, nil
 
 	default:
