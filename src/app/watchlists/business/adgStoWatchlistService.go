@@ -29,7 +29,6 @@ func NewadgStoWatchlistService(repo repository.AdgStoWatchlistRepository, rdb *r
 }
 
 func (service *AdgStoWatchlistService) AdgStoWatchlist(ctx context.Context, username string, request models.BffAdgStoWatchlistRequest) ([]string, []models.WatchlistWithId, error) {
-	// rdb := utils.GetRedisClient()
 	ReqAction := models.Actiontype(strings.ToUpper(string(request.Action)))
 
 	user, err := service.adgStoWatchlistRepository.GetUserByUsername(ctx, username)
