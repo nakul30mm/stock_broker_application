@@ -1,7 +1,7 @@
 package router
 
 import (
-	"authentication/middleware"
+	"watchlists/middleware"
 	genericConstants "stock_broker_application/src/constants"
 	"watchlists/business"
 	"watchlists/commons/constants"
