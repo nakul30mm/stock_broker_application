@@ -1,13 +1,13 @@
 package router
 
 import (
-	"watchlists/middleware"
 	genericConstants "stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
 	"watchlists/business"
 	"watchlists/commons/constants"
 	"watchlists/docs"
 	"watchlists/handlers"
+	"watchlists/middleware"
 	"watchlists/repository"
 
 	"github.com/gin-contrib/cors"
@@ -40,7 +40,7 @@ func GetRouter() *gin.Engine {
 
 	authGroup := router.Group(constants.AdgRoutePrefix)
 	{
-		authGroup.POST(constants.AdgScripToWatchlist, middleware.AuthMiddleware(), adgScripHandler.HandleAdgStoWatchlist)
+		authGroup.POST(constants.AdgScripToWatchlist, middleware.AuthMiddleware(rdb), adgScripHandler.HandleAdgStoWatchlist)
 	}
 
 	return router

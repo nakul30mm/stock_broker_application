@@ -21,6 +21,7 @@ func GetRouter() *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(gin.Recovery())
+	rdb := utils.GetRedisClient()
 
 	docs.SwaggerInfo.Title = constants.SwaggerTitle
 
@@ -49,12 +50,16 @@ func GetRouter() *gin.Engine {
 	changePasswordService := business.NewChangePasswordService(changePasswordRepository, postgresClient)
 	changePasswordHandler := handlers.NewChangePasswordHandler(changePasswordService)
 
+	logoutService := business.NewLogoutService(rdb)
+	logoutHandler := handlers.NewLogoutHandler(logoutService)
+
 	authGroup := router.Group(constants.AuthRoutePrefix)
 	{
 		authGroup.POST(constants.Signup, createUserHandler.HandleCreaterUser)
 		authGroup.POST(constants.Signin, signInHandler.HandleSignIn)
 		authGroup.POST(constants.Validateotp, verifyUserOtpHandler.HandleValidateUserOtp)
-		authGroup.POST(constants.Changepassword, middleware.AuthMiddleware(), changePasswordHandler.HandleChangePassword)
+		authGroup.POST(constants.Changepassword, middleware.AuthMiddleware(rdb), changePasswordHandler.HandleChangePassword)
+		authGroup.POST("/logout", logoutHandler.Logout)
 	}
 
 	return router

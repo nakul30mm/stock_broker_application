@@ -7,11 +7,12 @@ import (
 	"stock_broker_application/src/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 )
 
-func AuthMiddleware() gin.HandlerFunc {
+func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		if err := ValidateToken(ctx); err != nil {
+		if err := ValidateToken(ctx, rdb); err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
 				Message: models.ErrorMessage{
 					Key:          commons.Token,
