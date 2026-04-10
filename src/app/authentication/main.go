@@ -8,7 +8,9 @@ import (
 	"stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 // @title Authentication Service API
@@ -33,12 +35,15 @@ func main() {
 		log.Fatalf(constants.ErrRedisInitFailed, err)
 	}
 
-	startRouter()
+	db := utils.GetPostgresClient().GormDB
+	rdb := utils.GetRedisClient()
+
+	startRouter(db, rdb)
 }
 
-func startRouter() {
+func startRouter(db *gorm.DB, rdb *redis.Client) {
 	logger := logrus.New()
-	router := router.GetRouter()
+	router := router.GetRouter(db, rdb)
 	logger.Info(fmt.Sprintf(constants.RunningServerPort, ServiceConstants.PortDefaultValude))
 	router.Run(fmt.Sprintf(":%d", ServiceConstants.PortDefaultValude))
 }

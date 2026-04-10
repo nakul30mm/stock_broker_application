@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"time"
 
+	genericConstants "stock_broker_application/src/constants"
+
+	"github.com/bytedance/gopkg/util/logger"
 	"github.com/redis/go-redis/v9"
+	"github.com/sirupsen/logrus"
 )
 
 type LogoutService struct {
@@ -20,19 +24,18 @@ func NewLogoutService(rdb *redis.Client) *LogoutService {
 }
 
 func (service *LogoutService) Logout(ctx context.Context, token string, ttl time.Duration) error {
+	logrus.SetLevel(logrus.WarnLevel)
 	if service.rdb == nil {
-		return errors.New("redis client not initialized")
+		logrus.Error("redis client not initialized")
+		return errors.New(genericConstants.RedisClientNotInitialized)
 	}
+
 	key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", token)
-	exists, err := service.rdb.Exists(ctx, key).Result()
+	err := service.rdb.Set(ctx, key, 1, ttl).Err()
 	if err != nil {
+		logger.Info("error saving key in redis", err)
 		return err
 	}
-	if exists == 1 {
-		return errors.New("token is already blacklisted")
-	}
-	if ttl <= 0 {
-		return nil
-	}
-	return service.rdb.Set(ctx, key, "1", ttl).Err() //replace TTL with TokenExpiry-time.now()
+	logger.Infof("key: %s, set successfully in redis", key)
+	return nil
 }

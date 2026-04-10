@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"errors"
 	"stock_broker_application/src/constants"
 	"stock_broker_application/src/models"
 	"stock_broker_application/src/utils/configs"
@@ -17,7 +16,7 @@ func GenerateToken(username string) (string, string, error) {
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": username,
 		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(time.Hour * 12).Unix(),
+		"exp": time.Now().Add(time.Second * 300).Unix(),
 	})
 
 	accessTokenString, err := accessToken.SignedString([]byte(SecretKey.AccessSecretKey))
@@ -45,21 +44,4 @@ func InitJWTConfig(configPath string) error {
 		return err
 	}
 	return nil
-}
-
-func ExtractExpiry(tokenString string) (time.Duration, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(SecretKey.AccessSecretKey), nil
-	})
-	if err != nil {
-		return 0, err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		exp := int64(claims["exp"].(float64))
-		expTime := time.Unix(exp, 0)
-		return time.Until(expTime), nil
-	}
-
-	return 0, errors.New("invalid token")
 }

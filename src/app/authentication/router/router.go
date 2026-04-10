@@ -13,15 +13,16 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	files "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 )
 
-func GetRouter() *gin.Engine {
+func GetRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(gin.Recovery())
-	rdb := utils.GetRedisClient()
 
 	docs.SwaggerInfo.Title = constants.SwaggerTitle
 
@@ -59,7 +60,7 @@ func GetRouter() *gin.Engine {
 		authGroup.POST(constants.Signin, signInHandler.HandleSignIn)
 		authGroup.POST(constants.Validateotp, verifyUserOtpHandler.HandleValidateUserOtp)
 		authGroup.POST(constants.Changepassword, middleware.AuthMiddleware(rdb), changePasswordHandler.HandleChangePassword)
-		authGroup.POST("/logout", logoutHandler.Logout)
+		authGroup.POST(constants.Logout, middleware.AuthMiddleware(rdb), logoutHandler.Logout)
 	}
 
 	return router

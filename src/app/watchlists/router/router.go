@@ -2,7 +2,6 @@ package router
 
 import (
 	genericConstants "stock_broker_application/src/constants"
-	"stock_broker_application/src/utils"
 	"watchlists/business"
 	"watchlists/commons/constants"
 	"watchlists/docs"
@@ -12,11 +11,13 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	files "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"gorm.io/gorm"
 )
 
-func GetRouter() *gin.Engine {
+func GetRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(gin.Recovery())
@@ -30,9 +31,6 @@ func GetRouter() *gin.Engine {
 		AllowMethods: []string{genericConstants.POST, genericConstants.GET},
 		AllowHeaders: []string{genericConstants.Origin, genericConstants.ContentType, genericConstants.Authorization},
 	}))
-
-	db := utils.GetPostgresClient().GormDB
-	rdb := utils.GetRedisClient()
 
 	adgScripRepository := repository.NewadgStoWatchlistsRepository(db, rdb)
 	adgScripService := business.NewadgStoWatchlistService(adgScripRepository, rdb)
