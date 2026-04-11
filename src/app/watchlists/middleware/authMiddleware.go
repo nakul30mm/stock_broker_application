@@ -17,7 +17,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
+func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		//extracting the header
 		header := ctx.GetHeader(genericConstants.Authorization)
@@ -48,7 +48,7 @@ func AuthMiddleware(rdb *redis.Client) gin.HandlerFunc {
 
 		//validating if token is already blacklisted
 		key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", tokenString)
-		val, err := rdb.Get(ctx, key).Result()
+		val, err := redisClient.Get(ctx, key).Result()
 		if err == nil && val == "1" {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
 				Message: models.ErrorMessage{

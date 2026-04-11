@@ -36,14 +36,14 @@ func main() {
 	}
 
 	db := utils.GetPostgresClient().GormDB
-	rdb := utils.GetRedisClient()
+	redisClient := utils.GetRedisClient()
 
-	startRouter(db, rdb)
+	startRouter(db, redisClient)
 }
 
-func startRouter(db *gorm.DB, rdb *redis.Client) {
+func startRouter(db *gorm.DB, redisClient *redis.Client) {
 	logger := logrus.New()
-	router := router.GetRouter(db, rdb)
+	router := router.GetRouter(db, redisClient)
 	logger.Info(fmt.Sprintf(constants.RunningServerPort, ServiceConstants.PortDefaultValude))
 	router.Run(fmt.Sprintf(":%d", ServiceConstants.PortDefaultValude))
 }

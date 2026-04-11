@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
+func GetRouter(db *gorm.DB, redisClient *redis.Client) *gin.Engine {
 	router := gin.New()
 	router.Use(middleware.LoggerMiddleware())
 	router.Use(gin.Recovery())
@@ -32,13 +32,13 @@ func GetRouter(db *gorm.DB, rdb *redis.Client) *gin.Engine {
 		AllowHeaders: []string{genericConstants.Origin, genericConstants.ContentType, genericConstants.Authorization},
 	}))
 
-	adgScripRepository := repository.NewadgStoWatchlistsRepository(db, rdb)
-	adgScripService := business.NewadgStoWatchlistService(adgScripRepository, rdb)
+	adgScripRepository := repository.NewadgStoWatchlistsRepository(db, redisClient)
+	adgScripService := business.NewadgStoWatchlistService(adgScripRepository, redisClient)
 	adgScripHandler := handlers.NewAdgStoWatchlistHandler(adgScripService)
 
 	authGroup := router.Group(constants.AdgRoutePrefix)
 	{
-		authGroup.POST(constants.AdgScripToWatchlist, middleware.AuthMiddleware(rdb), adgScripHandler.HandleAdgStoWatchlist)
+		authGroup.POST(constants.AdgScripToWatchlist, middleware.AuthMiddleware(redisClient), adgScripHandler.HandleAdgStoWatchlist)
 	}
 
 	return router

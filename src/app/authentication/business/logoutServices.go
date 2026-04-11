@@ -14,24 +14,24 @@ import (
 )
 
 type LogoutService struct {
-	rdb *redis.Client
+	redisClient *redis.Client
 }
 
-func NewLogoutService(rdb *redis.Client) *LogoutService {
+func NewLogoutService(redisClient *redis.Client) *LogoutService {
 	return &LogoutService{
-		rdb: rdb,
+		redisClient: redisClient,
 	}
 }
 
 func (service *LogoutService) Logout(ctx context.Context, token string, ttl time.Duration) error {
 	logrus.SetLevel(logrus.WarnLevel)
-	if service.rdb == nil {
+	if service.redisClient == nil {
 		logrus.Error("redis client not initialized")
 		return errors.New(genericConstants.RedisClientNotInitialized)
 	}
 
 	key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", token)
-	err := service.rdb.Set(ctx, key, 1, ttl).Err()
+	err := service.redisClient.Set(ctx, key, 1, ttl).Err()
 	if err != nil {
 		logger.Info("error saving key in redis", err)
 		return err
