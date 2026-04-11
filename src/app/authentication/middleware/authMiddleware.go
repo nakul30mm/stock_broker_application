@@ -129,6 +129,54 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		tokenJti, ok := claims[genericConstants.JTI].(string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.InvalidTokenError,
+				},
+				Error: genericConstants.InvlalidJTIClaimsError,
+			})
+			return
+		}
+
+		deviceType, ok := claims[genericConstants.DeviceType].(string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.InvalidTokenError,
+				},
+				Error: genericConstants.InvalidDeviceTypeClaimsError,
+			})
+			return
+		}
+
+		sessionKey := fmt.Sprintf("session:%s:%s", username, deviceType)
+		activeJti, err := redisClient.Get(ctx, sessionKey).Result()
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.SessionExpiredError,
+				},
+				Error: "token expired",
+			})
+			return
+		}
+
+		if tokenJti != activeJti {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.NewLoginDetectedError,
+				},
+				Error: genericConstants.SessionSuspendedError,
+			})
+			return
+		}
+
 		ctx.Set(commons.Username, username)
 		ctx.Next()
 	}

@@ -1,5 +1,6 @@
 package commons
 
 const (
-	Username = "username"
+	Username    = "username"
+	TokenExpiry = "tokenExpiry"
 )

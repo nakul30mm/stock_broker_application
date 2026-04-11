@@ -1,9 +1,6 @@
 package middleware
 
 import (
-	"authentication/commons"
-	"authentication/commons/constants"
-	"authentication/models"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,6 +8,8 @@ import (
 	"stock_broker_application/src/utils"
 	"strings"
 	"time"
+	"watchlists/commons"
+	"watchlists/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -55,7 +54,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 					Key:          genericConstants.Token,
 					ErrorMessage: genericConstants.InvalidTokenError,
 				},
-				Error: constants.UserAlreadyLoggedoutError,
+				Error: genericConstants.UserAlreadyLoggedoutError,
 			})
 			return
 		}
@@ -115,7 +114,6 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 		}
 
 		ctx.Set(commons.TokenExpiry, int64(expiry))
-		fmt.Println("middleware EXP: ", ctx.GetInt64(commons.TokenExpiry))
 
 		//extracting username and binding with the context
 		username, ok := claims[genericConstants.Sub].(string)
@@ -126,6 +124,54 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 					ErrorMessage: genericConstants.InvalidTokenError,
 				},
 				Error: genericConstants.InvalidSubClaimsError,
+			})
+			return
+		}
+
+		tokenJti, ok := claims[genericConstants.JTI].(string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.InvalidTokenError,
+				},
+				Error: genericConstants.InvlalidJTIClaimsError,
+			})
+			return
+		}
+
+		deviceType, ok := claims[genericConstants.DeviceType].(string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.InvalidTokenError,
+				},
+				Error: genericConstants.InvalidDeviceTypeClaimsError,
+			})
+			return
+		}
+
+		sessionKey := fmt.Sprintf("session:%s:%s", username, deviceType)
+		activeJti, err := redisClient.Get(ctx, sessionKey).Result()
+		if err != nil {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.SessionExpiredError,
+				},
+				Error: "token expired",
+			})
+			return
+		}
+
+		if tokenJti != activeJti {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
+				Message: models.ErrorMessage{
+					Key:          genericConstants.Token,
+					ErrorMessage: genericConstants.NewLoginDetectedError,
+				},
+				Error: genericConstants.SessionSuspendedError,
 			})
 			return
 		}

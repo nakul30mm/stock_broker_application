@@ -7,21 +7,26 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var SecretKey *models.JWT
 
-func GenerateToken(username string) (string, string, error) {
+func GenerateToken(username string, deviceType string) (string, string, string, error) {
+
+	jti := uuid.New().String()
 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": username,
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(time.Second * 300).Unix(),
+		"sub":         username,
+		"iat":         time.Now().Unix(),
+		"exp":         time.Now().Add(time.Second * 300).Unix(),
+		"jti":         jti,
+		"device_type": deviceType,
 	})
 
 	accessTokenString, err := accessToken.SignedString([]byte(SecretKey.AccessSecretKey))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -32,9 +37,9 @@ func GenerateToken(username string) (string, string, error) {
 
 	refreshTokenString, err := refreshToken.SignedString([]byte(SecretKey.RefreshSecretKey))
 	if err != nil {
-		return "", "", err
+		return "", "", "", err
 	}
-	return accessTokenString, refreshTokenString, nil
+	return accessTokenString, refreshTokenString, jti, nil
 }
 
 func InitJWTConfig(configPath string) error {

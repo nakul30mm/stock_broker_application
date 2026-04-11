@@ -6,6 +6,7 @@ import (
 	"authentication/repository"
 	"context"
 	"errors"
+	"fmt"
 	"stock_broker_application/src/utils"
 	"time"
 
@@ -32,8 +33,7 @@ func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpReposit
 }
 
 // this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
-func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
-	// postgresClinet := utils.GetPostgresClient().GormDB
+func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
 	userFromDB, err := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -50,9 +50,17 @@ func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, span
 		return "", commons.OtpExpiredError //errors.New(constants.ErrExpiredOtp)
 	}
 
-	accessToken, _, err := utils.GenerateToken(bffValidateUserOtpRequest.Username)
+	accessToken, _, jti, err := utils.GenerateToken(bffValidateUserOtpRequest.Username, bffValidateUserOtpRequest.DeviceType)
 	if err != nil {
 		return "", err
+	}
+
+	redisClient := utils.GetRedisClient()
+	sessionKey := fmt.Sprintf("session:%s:%s", bffValidateUserOtpRequest.Username, bffValidateUserOtpRequest.DeviceType)
+
+	err = redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
+	if err != nil {
+		return "", fmt.Errorf("failed to register session in redis: %v", err)
 	}
 	return accessToken, nil
 }

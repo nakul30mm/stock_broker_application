@@ -44,6 +44,7 @@ const (
 	ErrUserNotFound         = "user not found"
 )
 
+//header-token
 const (
 	InvalidTokenError            = "invalid token"
 	AuthHeaderMissingError       = "missing authorization header"
@@ -52,6 +53,17 @@ const (
 	UnexpectedSigningMethod      = "unexpected signing method"
 	InvalidExpClaimsError        = "invalid exp claims"
 	InvalidSubClaimsError        = "invalid sub claims"
+	InvlalidJTIClaimsError       = "invalid jti claims"
+	InvalidDeviceTypeClaimsError = "invalid deviceType claims"
 	TokenExpiredError            = "token is already expired"
 	RedisClientNotInitialized    = "redis client not initialized"
+	SessionExpiredError          = "session expired or logged out"
+	SessionSuspendedError        = "session suspended due to new login"
+	NewLoginDetectedError        = "new login detected on another device"
+)
+
+//logout
+const (
+	UserAlreadyLoggedoutError = "user already logged out"
+	LogoutFailedError         = "logout failed"
 )

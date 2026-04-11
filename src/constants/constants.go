@@ -82,6 +82,8 @@ const (
 
 // claims
 const (
-	Exp = "exp"
-	Sub = "sub"
+	Exp        = "exp"
+	Sub        = "sub"
+	JTI        = "jti"
+	DeviceType = "device_type"
 )

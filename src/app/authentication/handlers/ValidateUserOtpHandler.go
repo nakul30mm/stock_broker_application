@@ -59,7 +59,7 @@ func (controller *ValidateUserOtpHandler) HandleValidateUserOtp(ctx *gin.Context
 		return
 	}
 
-	accessToken, errWhileOtpValidation := controller.service.ValidateUserOtp(ctx, ctx.Request.Context(), bffValidateUserOtpRequest)
+	accessToken, errWhileOtpValidation := controller.service.ValidateUserOtp(ctx.Request.Context(), bffValidateUserOtpRequest)
 	if errWhileOtpValidation != nil {
 		if errors.Is(errWhileOtpValidation, commons.UserNotFoundError) { //errors.New(constants.ErrUserNotFound)
 			errorUserNotFoundResponse := genericModels.ErrorAPIResponse{

@@ -56,7 +56,7 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 		return
 	}
 
-	errWhileSignIn := controller.service.SignIn(ctx, ctx.Request.Context(), bffSignInRequest)
+	errWhileSignIn := controller.service.SignIn(ctx.Request.Context(), bffSignInRequest)
 	if errWhileSignIn != nil {
 		if errors.Is(errWhileSignIn, errors.New(constants.ErrUserNotFound)) {
 			errorResponse := genericModels.ErrorAPIResponse{

@@ -19,7 +19,7 @@ func NewSignInService(signinRepository repository.SignInRepository) *SignInServi
 	}
 }
 
-func (service *SignInService) SignIn(ctx context.Context, spanCtx context.Context, bffSignInRequest models.BFFSignInRequest) error {
+func (service *SignInService) SignIn(spanCtx context.Context, bffSignInRequest models.BFFSignInRequest) error {
 	postgresClinet := utils.GetPostgresClient().GormDB
 	// tx := postgresClinet.GormDB.Begin()
 
