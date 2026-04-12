@@ -111,7 +111,7 @@ const docTemplate = `{
                 },
                 "scripId": {
                     "type": "string",
-                    "example": "RELI_2018"
+                    "example": "RELI"
                 },
                 "watchlistIds": {
                     "type": "array",

@@ -46,7 +46,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 
 		tokenString := parts[1]
 
-		//validating if token is already blacklisted
+		//validating if token is already blacklisted, if yes means the user was already loggedout from the system
 		key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", tokenString)
 		val, err := redisClient.Get(ctx, key).Result()
 		if err == nil && val == "1" {
@@ -75,7 +75,6 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
 			return
 		}
-
 		ctx.Set(genericConstants.Token, tokenString)
 
 		//extracting claims for verification
@@ -113,7 +112,6 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			})
 			return
 		}
-
 		ctx.Set(commons.TokenExpiry, int64(expiry))
 
 		//extracting username and binding with the context
@@ -128,6 +126,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			})
 			return
 		}
+		ctx.Set(commons.Username, username)
 
 		tokenJti, ok := claims[genericConstants.JTI].(string)
 		if !ok {
@@ -153,7 +152,10 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		//creating a key for storing session : jti of the user in the cache, if present means older session exists
 		sessionKey := fmt.Sprintf("session:%s:%s", username, deviceType)
+
+		//getting the JTI for the user session if stored in the cache
 		activeJti, err := redisClient.Get(ctx, sessionKey).Result()
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
@@ -166,6 +168,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
+		//if the new JTI != older JTI means a new login ha been done somewhere else, so we'll invalidate the older one
 		if tokenJti != activeJti {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
 				Message: models.ErrorMessage{
@@ -176,8 +179,6 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			})
 			return
 		}
-
-		ctx.Set(commons.Username, username)
 		ctx.Next()
 	}
 }

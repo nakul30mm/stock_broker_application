@@ -29,7 +29,8 @@ func (service *LogoutService) Logout(ctx context.Context, token string, ttl time
 		logrus.Error("redis client not initialized")
 		return errors.New(genericConstants.RedisClientNotInitialized)
 	}
-
+ 
+	//creating a key for blacklisting the token in the cache
 	key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", token)
 	err := service.redisClient.Set(ctx, key, 1, ttl).Err()
 	if err != nil {

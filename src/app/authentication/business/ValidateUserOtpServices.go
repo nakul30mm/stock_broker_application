@@ -56,8 +56,10 @@ func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, 
 	}
 
 	redisClient := utils.GetRedisClient()
+	//created a key for storing the session and the JTI for tht session
 	sessionKey := fmt.Sprintf("session:%s:%s", bffValidateUserOtpRequest.Username, bffValidateUserOtpRequest.DeviceType)
 
+	//saving/ updating in redis
 	err = redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to register session in redis: %v", err)

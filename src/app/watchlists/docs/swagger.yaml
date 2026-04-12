@@ -17,7 +17,7 @@ definitions:
         description: ADD or  DEL or GET
         example: GET
       scripId:
-        example: RELI_2018
+        example: RELI
         type: string
       watchlistIds:
         example:

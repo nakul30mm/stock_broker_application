@@ -358,10 +358,19 @@ const docTemplate = `{
         "models.BFFSignInRequest": {
             "type": "object",
             "required": [
+                "device_type",
                 "password",
                 "username"
             ],
             "properties": {
+                "device_type": {
+                    "type": "string",
+                    "enum": [
+                        "web",
+                        "mobile"
+                    ],
+                    "example": "web"
+                },
                 "password": {
                     "type": "string",
                     "maxLength": 20,
@@ -387,10 +396,19 @@ const docTemplate = `{
         "models.BFFValidateUserOtpRequest": {
             "type": "object",
             "required": [
+                "device_type",
                 "otp",
                 "username"
             ],
             "properties": {
+                "device_type": {
+                    "type": "string",
+                    "enum": [
+                        "web",
+                        "mobile"
+                    ],
+                    "example": "web"
+                },
                 "otp": {
                     "type": "string"
                 },

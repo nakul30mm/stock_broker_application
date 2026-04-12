@@ -19,7 +19,7 @@ func GenerateToken(username string, deviceType string) (string, string, string, 
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":         username,
 		"iat":         time.Now().Unix(),
-		"exp":         time.Now().Add(time.Second * 300).Unix(),
+		"exp":         time.Now().Add(time.Hour * 24).Unix(),
 		"jti":         jti,
 		"device_type": deviceType,
 	})
@@ -30,9 +30,11 @@ func GenerateToken(username string, deviceType string) (string, string, string, 
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"sub": username,
-		"iat": time.Now().Unix(),
-		"exp": time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"sub":         username,
+		"iat":         time.Now().Unix(),
+		"exp":         time.Now().Add(time.Hour * 24 * 30).Unix(),
+		"jti":         jti,
+		"device_type": deviceType,
 	})
 
 	refreshTokenString, err := refreshToken.SignedString([]byte(SecretKey.RefreshSecretKey))
