@@ -15,7 +15,7 @@ var (
 )
 
 func InitRedis() (*redis.Client, error) {
-	var err error //because the Do func doesnt't return anything so we'll need to capture that error ouside that func to return in
+	var err error //because the Do func doesnt't return anything so we'll need to capture that error ouside that func to return it
 	//once.Do creates a connectio pool only once
 	once.Do(func() {
 		client := redis.NewClient(&redis.Options{

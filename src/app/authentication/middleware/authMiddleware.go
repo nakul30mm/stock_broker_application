@@ -152,7 +152,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		//creating a key for storing session : jti of the user in the cache, if present means older session exists
+		//creating a key for storing session:jti of the user in the cache, if present means older session exists
 		sessionKey := fmt.Sprintf("session:%s:%s", username, deviceType)
 
 		//getting the JTI for the user session if stored in the cache
@@ -168,7 +168,7 @@ func AuthMiddleware(redisClient *redis.Client) gin.HandlerFunc {
 			return
 		}
 
-		//if the new JTI != older JTI means a new login ha been done somewhere else, so we'll invalidate the older one
+		//if the new JTI != older JTI means a new login has been done somewhere else, so we'll invalidate the older one
 		if tokenJti != activeJti {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.ErrorAPIResponse{
 				Message: models.ErrorMessage{

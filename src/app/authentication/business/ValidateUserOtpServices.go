@@ -62,7 +62,7 @@ func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, 
 	//saving/ updating in redis
 	err = redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
 	if err != nil {
-		return "", fmt.Errorf("failed to register session in redis: %v", err)
+		return "", fmt.Errorf("failed to register session: %v", err)
 	}
 	return accessToken, nil
 }

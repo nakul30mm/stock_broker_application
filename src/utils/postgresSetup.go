@@ -27,7 +27,7 @@ func InitPostgresConfg(configPath string) error {
 
 	setDBInstance(db)
 	return nil
-}
+} 
 
 func setDBInstance(db *gorm.DB) {
 	postgresClient = &models.DatabaseConfiguration{GormDB: db}
@@ -45,3 +45,12 @@ func initPostgresConfig(configPath string) error {
 	}
 	return nil
 }
+
+// func initPostgresConfig2()  {
+// 	pc:=&models.PostgresConfig{
+// 		Host: "localhost",
+// 		Port: "5432",
+// 	}
+
+// 	postgresConfig=pc
+// }
