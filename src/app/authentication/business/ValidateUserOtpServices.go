@@ -34,7 +34,7 @@ func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpReposit
 
 // this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
 func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
-	userFromDB, err := service.repository.GetUserByUsername(spanCtx, service.db, bffValidateUserOtpRequest.Username)
+	userFromDB, err := service.repository.GetUserByUsername(spanCtx, bffValidateUserOtpRequest.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", commons.UserNotFoundError //errors.New(constants.ErrUserNotFound)

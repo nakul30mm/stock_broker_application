@@ -8,4 +8,5 @@ const (
 	Validateotp     = "/validate-otp"
 	Changepassword  = "/change-password"
 	Logout          = "/logout"
+	SigninTest      = "/api/auth/signin"
 )

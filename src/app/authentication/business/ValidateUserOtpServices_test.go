@@ -16,6 +16,7 @@ package business
 // // test function for testing user not found error
 // func TestValidateUserOTP_UserNotFound(t *testing.T) {
 // 	mockRepo := &repository.MockValidateUserOtpRepository{
+// 		Db:    nil,
 // 		User:  nil,
 // 		Error: errors.New(constErrors.ErrUserNotFound),
 // 	}
@@ -27,7 +28,7 @@ package business
 // 		Otp:      "1209",
 // 	}
 
-// 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
+// 	_, err := service.ValidateUserOtp(context.Background(), testRequest)
 // 	// if err != constErrors.ErrUserNotFound {
 // 	// t.Errorf("expected %v, but got %v", constErrors.ErrUserNotFound, err)
 // 	// }
@@ -54,7 +55,7 @@ package business
 // 		Otp:      "1208",
 // 	}
 
-// 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
+// 	_, err := service.ValidateUserOtp(context.Background(), testRequest)
 // 	// if err != constErrors.ErrIncorrectOtp {
 // 	// t.Errorf("expected %v, but got %v", constErrors.ErrIncorrectOtp, err)
 // 	// }
@@ -81,7 +82,7 @@ package business
 // 		Otp:      "1209",
 // 	}
 
-// 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
+// 	_, err := service.ValidateUserOtp(context.Background(), testRequest)
 // 	assert.Equal(t, errors.New(constErrors.ErrExpiredOtp), err)
 // }
 
@@ -105,6 +106,6 @@ package business
 // 		Otp:      "1209",
 // 	}
 
-// 	err := service.ValidateUserOtp(context.Background(), context.Background(), testRequest)
+// 	_, err := service.ValidateUserOtp(context.Background(), testRequest)
 // 	assert.Equal(t, nil, err)
 // }

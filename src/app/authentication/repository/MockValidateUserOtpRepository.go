@@ -8,10 +8,11 @@ import (
 )
 
 type MockValidateUserOtpRepository struct {
+	Db    *gorm.DB
 	User  *genericModels.User
 	Error error
 }
 
-func (m *MockValidateUserOtpRepository) GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error) {
+func (m *MockValidateUserOtpRepository) GetUserByUsername(ctx context.Context, username string) (*genericModels.User, error) {
 	return m.User, m.Error
 }

@@ -68,3 +68,7 @@ const (
 	UserAlreadyLoggedoutError = "user already logged out"
 	LogoutFailedError         = "logout failed"
 )
+
+const (
+	DatabaseQueryError = "database query error"
+)

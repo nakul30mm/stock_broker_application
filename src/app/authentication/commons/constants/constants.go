@@ -36,3 +36,9 @@ const (
 	Secure   = true
 	HttpOnly = true
 )
+
+//test queries
+const (
+	QueryUserByEmail          = `SELECT * FROM "users" WHERE username = $1 ORDER BY "users"."id" LIMIT $2`
+	IncorrectQueryUserByEmail = `SELECT * FROM "users" WHERE username = $1 ORDER "users"."id" LIMIT $2` //doesn't include "BY"
+)

@@ -6,10 +6,10 @@ import (
 	"authentication/commons/constants"
 	"authentication/models"
 	"encoding/json"
-	"errors"
 	"net/http"
 	genericModels "stock_broker_application/src/models"
 	"stock_broker_application/src/utils/validations"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -56,35 +56,34 @@ func (controller *SignInHandler) HandleSignIn(ctx *gin.Context) {
 		return
 	}
 
-	errWhileSignIn := controller.service.SignIn(ctx.Request.Context(), bffSignInRequest)
-	if errWhileSignIn != nil {
-		if errors.Is(errWhileSignIn, errors.New(constants.ErrUserNotFound)) {
+	err := controller.service.SignIn(ctx.Request.Context(), bffSignInRequest)
+	if err != nil {
+		if strings.Contains(err.Error(), constants.ErrUserNotFound) {
 			errorResponse := genericModels.ErrorAPIResponse{
-				Message: genericModels.ErrorMessage{
-					Key:          commons.Username,
-					ErrorMessage: constants.ErrUserNotFound,
-				},
-				Error: constants.ErrAuthenticationFailed,
+				Message: genericModels.ErrorMessage{Key: commons.Username, ErrorMessage: constants.ErrUserNotFound},
+				Error:   constants.ErrAuthenticationFailed,
 			}
 			ctx.IndentedJSON(http.StatusNotFound, errorResponse)
 			return
 		}
 
-		if errors.Is(errWhileSignIn, errors.New(constants.ErrIncorrectPassword)) {
+		if strings.Contains(err.Error(), constants.ErrIncorrectPassword) {
 			errorResponse := genericModels.ErrorAPIResponse{
-				Message: genericModels.ErrorMessage{
-					Key:          commons.Password,
-					ErrorMessage: constants.ErrIncorrectPassword,
-				},
-				Error: constants.ErrAuthenticationFailed,
+				Message: genericModels.ErrorMessage{Key: commons.Password, ErrorMessage: constants.ErrIncorrectPassword},
+				Error:   constants.ErrAuthenticationFailed,
 			}
 			ctx.IndentedJSON(http.StatusUnauthorized, errorResponse)
 			return
 		}
-		ctx.IndentedJSON(http.StatusUnauthorized, genericModels.ErrorAPIResponse{
-			Error: constants.ErrSignInFailed,
-		})
-		return
+
+		if strings.Contains(err.Error(), constants.DatabaseQueryError) {
+			errResp := genericModels.ErrorAPIResponse{
+				Message: genericModels.ErrorMessage{Key: "server", ErrorMessage: "internal server error"},
+				Error:   "internal server error",
+			}
+			ctx.IndentedJSON(http.StatusInternalServerError, errResp)
+			return
+		}
 	}
 	ctx.IndentedJSON(http.StatusOK, constants.UserLoggedInSuccessMsg)
 }

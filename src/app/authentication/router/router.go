@@ -38,12 +38,12 @@ func GetRouter(db *gorm.DB, redisClient *redis.Client) *gin.Engine {
 	createUserService := business.NewCreateUserService(createUserRepository)
 	createUserHandler := handlers.NewCreateUserHandler(createUserService)
 
-	signInRepository := repository.NewSignInRepository()
+	signInRepository := repository.NewSignInRepository(db)
 	signInService := business.NewSignInService(signInRepository)
 	signInHandler := handlers.NewSignInHandler(signInService)
 
 	postgresClient := utils.GetPostgresClient().GormDB
-	verifyUserOtpRepository := repository.NewValidateUserOtpRepository()
+	verifyUserOtpRepository := repository.NewValidateUserOtpRepository(db)
 	verifyUserOtpService := business.NewValidateUserOtpService(verifyUserOtpRepository, postgresClient)
 	verifyUserOtpHandler := handlers.NewValidateUserOtpHandler(verifyUserOtpService)
 

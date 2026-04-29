@@ -5,26 +5,35 @@ import (
 	"context"
 	"fmt"
 	genericModels "stock_broker_application/src/models"
+	"strings"
 
 	"gorm.io/gorm"
 )
 
 type SignInRepository interface {
-	GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*genericModels.User, error)
 }
 
-type signInRepository struct{}
-
-func NewSignInRepository() *signInRepository {
-	return &signInRepository{}
+type signInRepository struct {
+	db *gorm.DB
 }
 
-func (repo *signInRepository) GetUserByUsername(ctx context.Context, db *gorm.DB, username string) (*genericModels.User, error) {
+func NewSignInRepository(db *gorm.DB) *signInRepository {
+	return &signInRepository{
+		db: db,
+	}
+}
+
+func (repo *signInRepository) GetUserByUsername(ctx context.Context, username string) (*genericModels.User, error) {
 	var user genericModels.User
 
-	result := db.WithContext(ctx).Table(constants.UsersTableName).Where(constants.Username, username).First(&user)
+	result := repo.db.WithContext(ctx).Table(constants.UsersTableName).Where(constants.Username, username).First(&user)
 	if result.Error != nil {
-		return nil, fmt.Errorf(constants.ErrUserNotFound)
+		fmt.Println("db error: ", result.Error)
+		if strings.Contains(result.Error.Error(), gorm.ErrRecordNotFound.Error()) {
+			return nil, fmt.Errorf(constants.ErrUserNotFound)
+		}
+		return nil, fmt.Errorf(constants.DatabaseQueryError)
 	}
 	return &user, nil
 }
