@@ -6,22 +6,24 @@ import (
 	"context"
 	"fmt"
 	genericErrors "stock_broker_application/src/constants"
-	"stock_broker_application/src/utils"
+
+	"gorm.io/gorm"
 )
 
 type CreateUserService struct {
 	createUserRepository repository.CreateUserRepository
+	DB                   *gorm.DB
 }
 
-func NewCreateUserService(createUserRepository repository.CreateUserRepository) *CreateUserService {
+func NewCreateUserService(createUserRepository repository.CreateUserRepository, db *gorm.DB) *CreateUserService {
 	return &CreateUserService{
 		createUserRepository: createUserRepository,
+		DB:                   db,
 	}
 }
 
-func (service *CreateUserService) CreateNewUser(ctx context.Context, spanCtx context.Context, bffCreateUserRequest models.BFFCreateUserRequest) error {
-	postgresClinet := utils.GetPostgresClient()
-	tx := postgresClinet.GormDB.Begin()
+func (service *CreateUserService) CreateNewUser(spanCtx context.Context, bffCreateUserRequest models.BFFCreateUserRequest) error {
+	tx := service.DB.Begin()
 
 	if tx.Error != nil {
 		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)

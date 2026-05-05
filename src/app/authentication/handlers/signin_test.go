@@ -56,7 +56,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn200UserLoggedInSuccessfully() {
 	columns := []string{"id", "username", "password", "pan_card", "phone_number", "email", "otp_sent", "otp_expires_at"}
 	rows := sqlmock.NewRows(columns).AddRow(1, username, hashedPassword, "ABCDE1234F", 9876543210, "test@example.com", 0, 0)
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(constants.QueryUserByEmail)).
+	s.mock.ExpectQuery(regexp.QuoteMeta(constants.UserByEmailTestQuery)).
 		WithArgs(username, 1).
 		WillReturnRows(rows)
 
@@ -68,7 +68,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn200UserLoggedInSuccessfully() {
 	jsonReq, _ := json.Marshal(signInReq) //marhalling because our handler expects a json body and has the binding validations,
 	// if we dont marshall the request body into json, it won't be able to extract the json tags we've defined in our request body struct
 
-	req, _ := http.NewRequest(http.MethodPost, "/api/auth/signin", bytes.NewBuffer(jsonReq)) //newbuffer because it accepts a byte slice and json.marshal returns a byte slice,
+	req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBuffer(jsonReq)) //newbuffer because it accepts a byte slice and json.marshal returns a byte slice,
 	// instead if we would've used newbufferstring, it acceps a string input so we would have needed to convert our json.marshal's byte slice response to string,
 	// so newbuffer eliminates that step
 	req.Header.Set("Content-Type", "application/json")
@@ -81,17 +81,6 @@ func (s *SignInTestSuite) TestMockHandleSignIn200UserLoggedInSuccessfully() {
 }
 
 func (s *SignInTestSuite) TestMockHandleSignIn400InvalidPayloadBindingErr() {
-	// username := "Nakul7500"
-	// password := "Admin@123"
-
-	// signInReq := models.BFFSignInRequest{
-	// 	Username: username,
-	// 	Password: password,
-	// }
-
-	// jsonReq, _ := json.Marshal(signInReq)
-
-	// req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBuffer(jsonReq))
 
 	req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBufferString(`{"username": 123}`))
 	req.Header.Set("Content-Type", "application/json")
@@ -101,10 +90,10 @@ func (s *SignInTestSuite) TestMockHandleSignIn400InvalidPayloadBindingErr() {
 
 	s.Equal(http.StatusBadRequest, w.Code)
 	s.Contains(w.Body.String(), "invalid required payload")
-	s.NoError(s.mock.ExpectationsWereMet())
 }
 
 func (s *SignInTestSuite) TestMockHandleSignIn400InvalidPayloadValidationErr() {
+
 	signInReq := models.BFFSignInRequest{
 		Username:   "Nakul",
 		Password:   "123",
@@ -112,7 +101,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn400InvalidPayloadValidationErr() {
 	}
 	jsonReq, _ := json.Marshal(signInReq)
 
-	req, _ := http.NewRequest(http.MethodPost, "/api/auth/signin", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBuffer(jsonReq))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -120,10 +109,10 @@ func (s *SignInTestSuite) TestMockHandleSignIn400InvalidPayloadValidationErr() {
 
 	s.Equal(http.StatusBadRequest, w.Code)
 	s.Contains(strings.ToLower(w.Body.String()), "password")
-	s.NoError(s.mock.ExpectationsWereMet())
 }
 
 func (s *SignInTestSuite) TestMockHandleSignIn401UnauthorizedWrongPassword() {
+
 	username := "Nakul7500"
 	correctPassword := "Admin@123"
 	hashedPassword, _ := utils.HashPassword(correctPassword)
@@ -132,7 +121,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn401UnauthorizedWrongPassword() {
 	rows := sqlmock.NewRows([]string{"id", "username", "password"}).
 		AddRow(1, username, hashedPassword)
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(constants.QueryUserByEmail)).
+	s.mock.ExpectQuery(regexp.QuoteMeta(constants.UserByEmailTestQuery)).
 		WithArgs(username, 1).
 		WillReturnRows(rows)
 
@@ -143,22 +132,23 @@ func (s *SignInTestSuite) TestMockHandleSignIn401UnauthorizedWrongPassword() {
 	}
 	jsonReq, _ := json.Marshal(signInReq)
 
-	req, _ := http.NewRequest(http.MethodPost, "/api/auth/signin", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBuffer(jsonReq))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
 	s.r.ServeHTTP(w, req)
 
 	s.Equal(http.StatusUnauthorized, w.Code)
-	// s.Contains(w.Body.String(), "incorrect password")
+	s.Contains(w.Body.String(), "entered password is not correct")
 	s.NoError(s.mock.ExpectationsWereMet())
 }
 
 func (s *SignInTestSuite) TestMockHandleSignIn404UserNotFound() {
+
 	username := "nakul1122"
 
 	columns := []string{"id", "username", "password"}
-	s.mock.ExpectQuery(regexp.QuoteMeta(constants.QueryUserByEmail)).
+	s.mock.ExpectQuery(regexp.QuoteMeta(constants.UserByEmailTestQuery)).
 		WithArgs(username, 1).
 		WillReturnRows(sqlmock.NewRows(columns)) //correct columns but zero rows of data
 
@@ -169,7 +159,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn404UserNotFound() {
 	}
 	jsonReq, _ := json.Marshal(signInReq)
 
-	req, _ := http.NewRequest(http.MethodPost, "/api/auth/signin", bytes.NewBuffer(jsonReq))
+	req, _ := http.NewRequest(http.MethodPost, constants.SigninTest, bytes.NewBuffer(jsonReq))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -181,6 +171,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn404UserNotFound() {
 }
 
 func (s *SignInTestSuite) TestMockHandleSignIn500InternalServerError() {
+
 	username := "Nakul7500"
 	password := "Admin@123"
 	hashedPassword, _ := utils.HashPassword(password)
@@ -188,7 +179,9 @@ func (s *SignInTestSuite) TestMockHandleSignIn500InternalServerError() {
 	columns := []string{"id", "username", "password", "pan_card", "phone_number", "email", "otp_sent", "otp_expires_at"}
 	rows := sqlmock.NewRows(columns).AddRow(1, username, hashedPassword, "ABCDE1234F", 9876543210, "test@example.com", 0, 0)
 
-	s.mock.ExpectQuery(regexp.QuoteMeta(constants.IncorrectQueryUserByEmail)).WithArgs(username, 1).WillReturnRows(rows)
+	s.mock.ExpectQuery(regexp.QuoteMeta(constants.UserByEmailIncorrectTestQuery)).
+		WithArgs(username, 1).
+		WillReturnRows(rows)
 
 	signInReq := models.BFFSignInRequest{
 		Username:   username,
@@ -206,6 +199,7 @@ func (s *SignInTestSuite) TestMockHandleSignIn500InternalServerError() {
 
 	s.Equal(http.StatusInternalServerError, w.Code)
 	s.Contains(w.Body.String(), "internal server error")
+	// s.NoError(s.mock.ExpectationsWereMet())
 }
 
 func TestSignInTestSuite(t *testing.T) {

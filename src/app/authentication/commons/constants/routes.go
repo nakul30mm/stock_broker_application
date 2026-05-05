@@ -9,4 +9,5 @@ const (
 	Changepassword  = "/change-password"
 	Logout          = "/logout"
 	SigninTest      = "/api/auth/signin"
+	SignupTest      = "/api/auth/signup"
 )

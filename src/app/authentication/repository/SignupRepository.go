@@ -19,10 +19,14 @@ type CreateUserRepository interface {
 	CreateNewUser(ctx context.Context, db *gorm.DB, bffCreateUserRequest models.BFFCreateUserRequest) error
 }
 
-type createUserRepository struct{}
+type createUserRepository struct {
+	DB *gorm.DB
+}
 
-func NewCreateUserRepository() *createUserRepository {
-	return &createUserRepository{}
+func NewCreateUserRepository(db *gorm.DB) *createUserRepository {
+	return &createUserRepository{
+		DB: db,
+	}
 }
 
 func (user *createUserRepository) CreateNewUser(ctx context.Context, db *gorm.DB, bffCreateUserRequest models.BFFCreateUserRequest) error {

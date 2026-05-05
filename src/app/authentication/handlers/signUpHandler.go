@@ -49,18 +49,16 @@ func (controller *CreaterUserHandler) HandleCreaterUser(ctx *gin.Context) {
 			Message: errorMsgs,
 			Error:   constants.ErrInvalidPayload,
 		})
-
 		return
 	}
 
 	if err := validations.GetBFFValidator().Struct(&bffCreateUserRequest); err != nil {
 		validationErros, _ := validations.FormatValidationErrors(err)
 		ctx.IndentedJSON(http.StatusBadRequest, validationErros)
-
 		return
 	}
 
-	err := controller.service.CreateNewUser(ctx, ctx.Request.Context(), bffCreateUserRequest)
+	err := controller.service.CreateNewUser(ctx.Request.Context(), bffCreateUserRequest)
 	if err != nil {
 		if strings.Contains(err.Error(), constants.ErrDuplicateEntry) {
 			errorResponse := genericModels.ErrorAPIResponse{
@@ -71,14 +69,12 @@ func (controller *CreaterUserHandler) HandleCreaterUser(ctx *gin.Context) {
 				Error: constants.ErrConflict,
 			}
 			ctx.IndentedJSON(http.StatusConflict, errorResponse)
-
 			return
 		}
 		errorResponse := genericModels.ErrorAPIResponse{
 			Error: constants.ErrUserCreationFailed,
 		}
 		ctx.IndentedJSON(http.StatusInternalServerError, errorResponse)
-
 		return
 	}
 

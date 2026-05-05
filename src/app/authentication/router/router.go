@@ -34,8 +34,8 @@ func GetRouter(db *gorm.DB, redisClient *redis.Client) *gin.Engine {
 		AllowHeaders: []string{genericConstants.Origin, genericConstants.ContentType, genericConstants.Authorization},
 	}))
 
-	createUserRepository := repository.NewCreateUserRepository()
-	createUserService := business.NewCreateUserService(createUserRepository)
+	createUserRepository := repository.NewCreateUserRepository(db)
+	createUserService := business.NewCreateUserService(createUserRepository, db)
 	createUserHandler := handlers.NewCreateUserHandler(createUserService)
 
 	signInRepository := repository.NewSignInRepository(db)
