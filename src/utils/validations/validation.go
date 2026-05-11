@@ -147,6 +147,15 @@ func ValidateEnum[E Enum](f1 validator.FieldLevel) bool {
 	return val.IsValid()
 }
 
+// func ValidateEnum(f1 validator.FieldLevel) bool {
+// 	action := f1.Field().String()
+// 	switch strings.ToUpper(action) {
+// 	case "ADD", "DEL", "GET":
+// 		return true
+// 	}
+// 	return false
+// }
+
 func IdChecker() {
 
 }

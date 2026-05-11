@@ -26,6 +26,7 @@ func (service *CreateUserService) CreateNewUser(spanCtx context.Context, bffCrea
 	tx := service.DB.Begin()
 
 	if tx.Error != nil {
+		fmt.Println("transaction BEGIN error ", tx.Error)
 		return fmt.Errorf(genericErrors.ErrBeginTx, tx.Error)
 	}
 
@@ -36,6 +37,7 @@ func (service *CreateUserService) CreateNewUser(spanCtx context.Context, bffCrea
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		fmt.Println("transaction COMMIT error ", err)
 		return fmt.Errorf(genericErrors.ErrCommitTx, err)
 	}
 

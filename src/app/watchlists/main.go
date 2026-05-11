@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"stock_broker_application/src/constants"
@@ -31,12 +32,18 @@ func main() {
 		log.Fatalf(constants.ErrJWTConfigReadFailed, err)
 	}
 
-	if _, err := utils.InitRedis(); err != nil {
+	// if _, err := utils.InitRedis(); err != nil {
+	// 	log.Fatalf(constants.ErrRedisInitFailed, err)
+	// }
+
+	// redisClient := utils.GetRedisClient()
+	db := utils.GetPostgresClient().GormDB
+
+	ctx := context.Background()
+	redisClient, _, err := utils.GetRedisClient(ctx, true)
+	if err != nil || redisClient == nil {
 		log.Fatalf(constants.ErrRedisInitFailed, err)
 	}
-
-	redisClient := utils.GetRedisClient()
-	db := utils.GetPostgresClient().GormDB
 
 	startRouter(db, redisClient)
 }

@@ -5,6 +5,7 @@ import (
 	"context"
 	genericModels "stock_broker_application/src/models"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -13,12 +14,14 @@ type ValidateUserOtpRepository interface {
 }
 
 type validateUserOtpRepository struct {
-	db *gorm.DB
+	db          *gorm.DB
+	redisClient *redis.Client
 }
 
-func NewValidateUserOtpRepository(db *gorm.DB) *validateUserOtpRepository {
+func NewValidateUserOtpRepository(db *gorm.DB, redisClient *redis.Client) *validateUserOtpRepository {
 	return &validateUserOtpRepository{
-		db: db,
+		db:          db,
+		redisClient: redisClient,
 	}
 }
 

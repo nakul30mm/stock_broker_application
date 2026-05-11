@@ -4,6 +4,7 @@ import (
 	"authentication/business"
 	"authentication/commons"
 	"authentication/commons/constants"
+	"fmt"
 	"net/http"
 	genericConstants "stock_broker_application/src/constants"
 	"stock_broker_application/src/models"
@@ -37,20 +38,27 @@ func NewLogoutHandler(service *business.LogoutService) *LogoutHandler {
 func (controller LogoutHandler) Logout(ctx *gin.Context) {
 
 	tokenString := ctx.GetString(genericConstants.Token)
-	tokenExpiry := ctx.GetInt64(commons.TokenExpiry)
-	ttl := time.Until(time.Unix(tokenExpiry, 0))
+
+	// tokenExpiry := ctx.GetInt64(commons.TokenExpiry)
+	tokenExpiry := ctx.MustGet(commons.TokenExpiry).(time.Time)
+	fmt.Println("token expiry: ", tokenExpiry)
+
+	// ttl := time.Until(time.Unix(tokenExpiry, 0))
+	ttl := time.Until(tokenExpiry)
+	fmt.Println("TTL: ", ttl)
 
 	logrus.SetLevel(logrus.WarnLevel)
 
 	err := controller.service.Logout(ctx, tokenString, ttl)
 	if err != nil {
+		logrus.Error("ERROR: ", err)
 		if strings.Contains(err.Error(), genericConstants.RedisClientNotInitialized) {
 			ctx.IndentedJSON(http.StatusInternalServerError, models.ErrorAPIResponse{
 				Message: models.ErrorMessage{
-					Key:          "",
-					ErrorMessage: "",
+					Key:          genericConstants.Server,
+					ErrorMessage: genericConstants.RedisClientNotInitialized,
 				},
-				Error: "",
+				Error: genericConstants.ErrInternalServer,
 			})
 			logrus.Error("redis client not initialized")
 			return

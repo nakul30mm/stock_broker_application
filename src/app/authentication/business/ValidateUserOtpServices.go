@@ -10,27 +10,30 @@ import (
 	"stock_broker_application/src/utils"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type ValidateUserOtpService struct {
-	repository repository.ValidateUserOtpRepository
-	db         *gorm.DB
+	repository  repository.ValidateUserOtpRepository
+	db          *gorm.DB
+	redisClient *redis.Client
 }
 
-func NewValidateUserOtpService(repository repository.ValidateUserOtpRepository, db *gorm.DB) *ValidateUserOtpService {
+func NewValidateUserOtpService(repository repository.ValidateUserOtpRepository, db *gorm.DB, redisClient *redis.Client) *ValidateUserOtpService {
 	return &ValidateUserOtpService{
-		repository: repository,
-		db:         db,
+		repository:  repository,
+		db:          db,
+		redisClient: redisClient,
 	}
 }
 
-func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpRepository, db *gorm.DB) *ValidateUserOtpService {
-	return &ValidateUserOtpService{
-		repository: mockRepo,
-		db:         db,
-	}
-}
+// func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpRepository, db *gorm.DB) *ValidateUserOtpService {
+// 	return &ValidateUserOtpService{
+// 		repository: mockRepo,
+// 		db:         db,
+// 	}
+// }
 
 // this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
 func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
@@ -55,12 +58,11 @@ func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, 
 		return "", err
 	}
 
-	redisClient := utils.GetRedisClient()
 	//created a key for storing the session and the JTI for tht session
 	sessionKey := fmt.Sprintf("session:%s:%s", bffValidateUserOtpRequest.Username, bffValidateUserOtpRequest.DeviceType)
 
 	//saving/ updating in redis
-	err = redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
+	err = service.redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to register session: %v", err)
 	}

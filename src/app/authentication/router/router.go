@@ -9,7 +9,6 @@ import (
 	"authentication/repository"
 
 	genericConstants "stock_broker_application/src/constants"
-	"stock_broker_application/src/utils"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -42,13 +41,13 @@ func GetRouter(db *gorm.DB, redisClient *redis.Client) *gin.Engine {
 	signInService := business.NewSignInService(signInRepository)
 	signInHandler := handlers.NewSignInHandler(signInService)
 
-	postgresClient := utils.GetPostgresClient().GormDB
-	verifyUserOtpRepository := repository.NewValidateUserOtpRepository(db)
-	verifyUserOtpService := business.NewValidateUserOtpService(verifyUserOtpRepository, postgresClient)
+	// postgresClient := utils.GetPostgresClient().GormDB
+	verifyUserOtpRepository := repository.NewValidateUserOtpRepository(db, redisClient)
+	verifyUserOtpService := business.NewValidateUserOtpService(verifyUserOtpRepository, db, redisClient)
 	verifyUserOtpHandler := handlers.NewValidateUserOtpHandler(verifyUserOtpService)
 
 	changePasswordRepository := repository.NewChangePasswordRepository()
-	changePasswordService := business.NewChangePasswordService(changePasswordRepository, postgresClient)
+	changePasswordService := business.NewChangePasswordService(changePasswordRepository, db)
 	changePasswordHandler := handlers.NewChangePasswordHandler(changePasswordService)
 
 	logoutService := business.NewLogoutService(redisClient)

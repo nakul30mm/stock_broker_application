@@ -10,4 +10,5 @@ const (
 	Logout          = "/logout"
 	SigninTest      = "/api/auth/signin"
 	SignupTest      = "/api/auth/signup"
+	LogoutTest      = "/api/auth/logout"
 )

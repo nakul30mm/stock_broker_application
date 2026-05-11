@@ -34,7 +34,7 @@ func (service *LogoutService) Logout(ctx context.Context, token string, ttl time
 	key := fmt.Sprintf("BLACKLISTED_TOKEN_%s", token)
 	err := service.redisClient.Set(ctx, key, 1, ttl).Err()
 	if err != nil {
-		logger.Info("error saving key in redis", err)
+		logrus.Error("error saving key in redis", err)
 		return err
 	}
 	logger.Infof("key: %s, set successfully in redis", key)
