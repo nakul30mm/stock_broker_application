@@ -11,4 +11,5 @@ const (
 	SigninTest      = "/api/auth/signin"
 	SignupTest      = "/api/auth/signup"
 	LogoutTest      = "/api/auth/logout"
+	ValidateOTPTest = "/api/auth/validate-otp"
 )

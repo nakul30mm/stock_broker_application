@@ -44,4 +44,7 @@ const (
 
 	CreateUserTestQuery          = `INSERT INTO "users"`
 	CreateUserIncorrectTestQuery = `INSERT "users"`
+
+	// ValidateUserOTPTestQuery = `SELECT * FROM "users" WHERE username = $1 ORDER BY "users"."id" LIMIT $2`
+	ValidateUserOTPTestQuery = `SELECT * FROM "users" WHERE username = $1 ORDER BY "users"."id" LIMIT $2`
 )

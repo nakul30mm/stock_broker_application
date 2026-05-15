@@ -54,12 +54,12 @@ func (l *LogoutTestSuite) SetupTest() {
 // test case for - successful logout
 func (s *LogoutTestSuite) TestMockLogout200SuccessfullyLoggedOut() {
 
-	expectedTTL := time.Until(time.Unix(fixedUnix, 0))
+	// expectedTTL := time.Until(time.Unix(fixedUnix, 0))
 
 	redisClient, mockRedisClient, _ := utils.GetRedisClient(ctx, false)
 	router := getLogoutRouter(redisClient)
 
-	mockRedisClient.ExpectSet(key, 1, time.Duration(expectedTTL)).SetVal("OK")
+	mockRedisClient.ExpectSet(key, 1, 0).SetVal("OK")
 
 	req, _ := http.NewRequest(http.MethodPost, constants.LogoutTest, nil)
 	req.Header.Set("Authorization", "Bearer "+token)

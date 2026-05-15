@@ -5,9 +5,9 @@ import (
 	"authentication/models"
 	"authentication/repository"
 	"context"
-	"errors"
 	"fmt"
 	"stock_broker_application/src/utils"
+	"strings"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -16,30 +16,22 @@ import (
 
 type ValidateUserOtpService struct {
 	repository  repository.ValidateUserOtpRepository
-	db          *gorm.DB
 	redisClient *redis.Client
 }
 
-func NewValidateUserOtpService(repository repository.ValidateUserOtpRepository, db *gorm.DB, redisClient *redis.Client) *ValidateUserOtpService {
+func NewValidateUserOtpService(repository repository.ValidateUserOtpRepository, redisClient *redis.Client) *ValidateUserOtpService {
 	return &ValidateUserOtpService{
 		repository:  repository,
-		db:          db,
 		redisClient: redisClient,
 	}
 }
 
-// func NewValidateUserOtpServiceForTest(mockRepo repository.ValidateUserOtpRepository, db *gorm.DB) *ValidateUserOtpService {
-// 	return &ValidateUserOtpService{
-// 		repository: mockRepo,
-// 		db:         db,
-// 	}
-// }
-
 // this function takes userRequest, fetches the user from db(via repository), performs all otp validations and returns error/ nil
-func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
-	userFromDB, err := service.repository.GetUserByUsername(spanCtx, bffValidateUserOtpRequest.Username)
+func (service *ValidateUserOtpService) ValidateUserOtp(ctx context.Context, bffValidateUserOtpRequest models.BFFValidateUserOtpRequest) (string, error) {
+	userFromDB, err := service.repository.GetUserByUsername(ctx, bffValidateUserOtpRequest.Username)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+		// if errors.Is(err, gorm.ErrRecordNotFound) {
+		if strings.Contains(err.Error(), gorm.ErrRecordNotFound.Error()) {
 			return "", commons.UserNotFoundError //errors.New(constants.ErrUserNotFound)
 		}
 		return "", err
@@ -62,7 +54,7 @@ func (service *ValidateUserOtpService) ValidateUserOtp(spanCtx context.Context, 
 	sessionKey := fmt.Sprintf("session:%s:%s", bffValidateUserOtpRequest.Username, bffValidateUserOtpRequest.DeviceType)
 
 	//saving/ updating in redis
-	err = service.redisClient.Set(spanCtx, sessionKey, jti, 24*time.Hour).Err()
+	err = service.redisClient.Set(ctx, sessionKey, jti, 24*time.Hour).Err()
 	if err != nil {
 		return "", fmt.Errorf("failed to register session: %v", err)
 	}

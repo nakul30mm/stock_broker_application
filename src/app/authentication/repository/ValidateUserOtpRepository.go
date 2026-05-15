@@ -3,9 +3,9 @@ package repository
 import (
 	"authentication/commons/constants"
 	"context"
+	"fmt"
 	genericModels "stock_broker_application/src/models"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -14,23 +14,23 @@ type ValidateUserOtpRepository interface {
 }
 
 type validateUserOtpRepository struct {
-	db          *gorm.DB
-	redisClient *redis.Client
+	db *gorm.DB
 }
 
-func NewValidateUserOtpRepository(db *gorm.DB, redisClient *redis.Client) *validateUserOtpRepository {
+func NewValidateUserOtpRepository(db *gorm.DB) *validateUserOtpRepository {
 	return &validateUserOtpRepository{
-		db:          db,
-		redisClient: redisClient,
+		db: db,
 	}
 }
 
 // this function takes username from request(from service), fetces the user from db and returns the user
 func (repo *validateUserOtpRepository) GetUserByUsername(ctx context.Context, username string) (*genericModels.User, error) {
 	var user genericModels.User
-	result := repo.db.WithContext(ctx).Table(constants.UsersTableName).Where(constants.Username, username).First(&user)
+	result := repo.db.Debug().WithContext(ctx).Table(constants.UsersTableName).Where(constants.Username, username).First(&user)
 	if result.Error != nil {
 		return nil, result.Error
 	}
+
+	fmt.Println("user: \n", user)
 	return &user, nil
 }

@@ -76,7 +76,6 @@ func (s *SignUpTestSuite) getSignUpRouter() *gin.Engine {
 
 	//settingup the router
 	gin.SetMode(gin.TestMode)
-	router = gin.New()
 	router.POST(constants.SignupTest, handler.HandleCreaterUser)
 
 	return router
