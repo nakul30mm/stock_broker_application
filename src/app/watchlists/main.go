@@ -6,9 +6,8 @@ import (
 	"log"
 	"stock_broker_application/src/constants"
 	"stock_broker_application/src/utils"
-	"watchlists/router"
-
 	ServiceConstants "watchlists/commons/constants"
+	"watchlists/router"
 
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
